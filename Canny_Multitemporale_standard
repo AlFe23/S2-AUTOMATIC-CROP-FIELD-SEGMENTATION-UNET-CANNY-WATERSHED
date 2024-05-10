@@ -2,6 +2,7 @@
 //------------------------- Versione Standard-----------------------------
 //--------------------------------------------------------------
 
+
 /*
 Questa versione del codice fa in modo tale da scalare NDVI ed NDWI dall'intervallo originale (-1,1) all'intervallo 0-65535 in modo tale da poter salvare il dato in uint16:
 To convert your NDVI and NDWI index data from float32 to uint16 while preserving the original information, you need to choose an appropriate scaling factor. This factor must map the original range of each index to the range that uint16 can represent (0 to 65535).
