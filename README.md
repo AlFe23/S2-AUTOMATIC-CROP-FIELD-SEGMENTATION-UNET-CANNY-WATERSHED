@@ -1,8 +1,8 @@
 # AUTOMATIC-CROP-FIELD-SEGMENTATION-USING-UNET-CANNY-WATERSHED
-Completely automatic software for crop field segmentation using Sentinel-2 satellite images. This tool leverages a UNet architecture, trained on  multitemporal Canny filter images, and watershed algorithm, to deliver high-precision segmentation. Ideal for agricultural researchers and GIS specialists seeking efficient and scalable solutions.
+Automatic software for crop field segmentation using Sentinel-2 satellite images. This tool leverages a UNet architecture, trained on  multitemporal Canny filter images, and watershed algorithm, to deliver high-precision segmentation. Ideal for agricultural researchers and GIS specialists seeking efficient and scalable solutions.
 
 
-## 1. Preparazione del Dataset con GEE
+## 1.1 Preparazione del Dataset con GEE
 
 Tramite lo script per GEE ('Canny_Multitemporale_standard') si genera un dataset aventi le seguenti caratteristiche:
 
@@ -18,3 +18,12 @@ Nella preparazione del dataset per il training UNet è importante riscalare i va
 **Geotiff uint8 composto da 1 canale** che contiene la maschera generata sovrapponendo output di filtro Canny applicato a sequenza multitemporale di immagine Sentinel-2 L2A. Compresso LZW, proiettato in EPSG:4326 - WGS 84.
 - Questa maschera è generata sommando tutti gli output di Canny ed i pixel hanno valori discreti compresi tra 0 e 255. Dovrà essere binarizzata applicando una threshold prima di proseguire con l’operazione di sub-tiling.
 
+## 1.2 Binarizzazione Maschera di Canny Multitemporale
+Una volta ottenute le Maschere multitemporali di Canny, è necessario binarizzarle tramite lo script 'canny_binarizer.py' prima di poterle utilizzare per l'addestramento della U-Net'
+Questo script è un estratto dello script 'canny_cleaner_v3.py', solo la prima parter dove viene effettuato il thresholding è mantenuta in questa parte.
+
+**Input:**
+   - Maschera Canny Multitemporale uint8 in scala di grigi (ottenuta da GEE)
+
+**Output:**
+   - Maschera di Canny binarizzata (0 == bordo ; 255 == non bordo)
