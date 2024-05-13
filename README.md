@@ -249,9 +249,9 @@ Lo script `ReMosaiker_overlap.py` Python è progettato per ricomporre un'immagin
 
 ### Configurazione
 Per utilizzare questo script, è necessario specificare:
-- **Cartella dei Subtiles**: Il percorso della directory contenente i subtiles.
-- **Dimensione dei Tiles**: La dimensione dei subtiles (ad esempio, 256x256 pixels).
-- **Dimensione dell'Overlap**: La dimensione dell'overlap tra i subtiles (ad esempio, 32 pixels).
+- **Cartella delle Subtiles**: Il percorso della directory contenente le subtiles.
+- **Dimensione dei Tiles**: La dimensione delle subtiles (ad esempio, 256x256 pixels).
+- **Dimensione dell'Overlap**: La dimensione dell'overlap tra le subtiles (ad esempio, 32 pixels).
 - **File di Output**: Il percorso e il nome del file TIFF di output.
 
 ad esempio:
