@@ -40,4 +40,17 @@ Lo script `new_subtiler_wOverlap.py` è progettato per preparare le immagini in 
 
 Per utilizzare lo script, è necessario specificare il file di input, la dimensione dei tile e la dimensione dell'overlap. 
 
+## 1.3 Rinominazione finale per input multipli 
+
+Al fine di poter costituire un dataset con input multipli, a cui però corrisponde sempre lo stesso output 
+(ricordiamo che la maschera di Canny è costituita sovrapponendo applicando l'omonimo filtro a immagini multiple),
+si è definita la semplice funzione `add_prefix_to_files` che aggiunge un determinato prefisso ai nomi di tutti i file contenuti 
+all'interno di una cartella specificata. In questa fase sperimentale sarà necessario aggiungere tale prefisso
+a tutte le cartelle contenenti le subtile di input; inoltre sarà necessario moltiplicare la cartella contenente 
+le subtile di output, per un numero di volte pari al numero delle immagini di input, ed applicare fittizziamente
+il prefisso corrispondente a ciascun input, a ognuna delle cartelle di output. Infine tutte le coppie i/o possono 
+essere organizzate in una unica directory che verrà utilizzata per training o fine tuning.
+
+- **Funzionamento:** Basta specificare il percorso della directory e il prefisso desiderato per processare tutti i file contenuti.
+
 
