@@ -152,7 +152,7 @@ Grafici della precisione, Loss, IoU e altre metriche vengono generati usando Mat
 
 
 
-## 2.1 Fine-Tuning di U-Net pre-addestrata
+## 2.2 Fine-Tuning di U-Net pre-addestrata
 
 ### Descrizione
 Lo script Python `Fine_tuning.py`  è destinato al fine-tuning di una rete U-Net già addestrata, per migliorarne la precisione su un nuovo dataset. A differenza del training da zero, il fine-tuning adatta un modello pre-addestrato per affinare ulteriormente le sue capacità predittive, sfruttando il sapere già acquisito.
@@ -187,5 +187,49 @@ Specifica i percorsi e le procedure di caricamento e normalizzazione, come descr
 ### Output del Training
 Genera e visualizza grafici di accuratezza, perdita, IoU, coefficiente di Dice, precisione e recall, permettendo una comparazione diretta con i risultati pre-fine-tuning.
 
+## 2.3 Inferenza con U-Net su Nuovi Dati
 
+Lo script `inference.py` esegue l'inferenza su un nuovo set di dati utilizzando un modello U-Net precedentemente addestrato.  L'obiettivo è generare maschere di segmentazione per singole immagini Sentinel-2 di input, applicando lo stesso preprocessing utilizzato nel training per garantire la coerenza dei risultati.
 
+### Prerequisiti
+- Python 3.x
+- TensorFlow 2.x
+- tifffile
+- NumPy
+
+### Configurazione
+- **Disabilitazione GPU**: Per impostazione predefinita, lo script esegue l'inferenza utilizzando la CPU. Questo può essere modificato rimuovendo o commentando la linea `os.environ['CUDA_VISIBLE_DEVICES'] = '-1'`.
+- **Modello Pre-addestrato**: Assicurati che il percorso al modello salvato sia corretto e accessibile dallo script.
+
+### Preparazione del Dataset
+Il dataset per l'inferenza deve essere preparato con lo stesso preprocessing usato per il training:
+- **Caricamento Immagini**: Le immagini devono essere caricate dalla directory specificata.
+- **Normalizzazione**: Le immagini vengono normalizzate nello stesso modo in cui sono state normalizzate durante il training.
+
+```python
+def load_and_preprocess_images(directory):
+    image_paths = glob.glob(os.path.join(directory, "*.tif"))
+    images = [tiff.imread(fp) for fp in image_paths]
+    images = np.array(images)
+    # Apply the same normalization as during training
+    images[:,:,:,0] = images[:,:,:,0] / 10000.0
+    images[:,:,:,1] = images[:,:,:,1] / 65535.0
+    images[:,:,:,2] = images[:,:,:,2] / 65535.0
+    return images, image_paths
+```
+
+### Esecuzione dell'Inferenza
+- **Carica e Preprocessa le Nuove Immagini**: Utilizza la funzione `load_and_preprocess_images` per preparare i dati.
+- **Esecuzione del Modello**: Applica il modello alle immagini preprocessate per generare le previsioni.
+
+### Salvataggio delle Maschere Predette
+Ogni maschera predetta viene salvata in una directory di output specificata, utilizzando un formato che facilita l'identificazione:
+
+```python
+for i, predicted_mask in enumerate(predicted_masks):
+    filename = os.path.basename(image_paths[i])
+    output_path = os.path.join(output_directory, f"predicted_{filename}")
+    tiff.imwrite(output_path, predicted_mask)
+```
+Le subtile predette avranno quindi la stessa logica di nominazione che hanno quelle di input. Questo è importante perchè è tramite la nomenclatura delle subtile che sarà facilmente ricostruire la maschera di output completa con lo script `ReMosaicker_overlap.py` descritto successivamente.
+Al termine dell'inferenza, le maschere predette saranno salvate nella directory specificata. Lo script fornisce feedback stampando il percorso della directory di output.
