@@ -103,7 +103,7 @@ Il modello viene addestrato con le seguenti specifiche:
 - **Batch Size**: 4 (variabile sulla base dell'hardware a disposizione)
 - **Epochs**: 100 (70 sono più che sufficienti
 - **Callbacks**: EarlyStopping, ReduceLROnPlateau, ModelCheckpoint per salvare i migliori pesi, e TensorBoard per il monitoring.
-Certamente! Ecco una descrizione dettagliata su come vengono gestiti gli input, nonché il salvataggio dei log di TensorBoard e dei pesi del modello nel tuo script di training U-Net.
+
 
 ### Gestione degli Input
 
