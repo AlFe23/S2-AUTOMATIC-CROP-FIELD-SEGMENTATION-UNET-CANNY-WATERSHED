@@ -178,7 +178,7 @@ Carica un modello pre-addestrato specificando il percorso ai pesi salvati. Quest
 - **Loss e Metriche**: Configura le funzioni di perdita e le metriche come nel training originale per mantenere la coerenza nelle valutazioni.
 
 ### Gestione degli Input
-Specifica i percorsi e le procedure di caricamento e normalizzazione, come descritto nella sezione di preparazione dei dati.
+Specifica i percorsi e le procedure di caricamento e normalizzazione, come descritto nella sezione di preparazione dei dati dello script di training da zero.
 
 ### Log e Salvataggio dei Pesi
 - **Logs**: Salva i log di TensorBoard per monitorare il fine-tuning secondo la stessa logica di directory descritta nello script di training da zero.
