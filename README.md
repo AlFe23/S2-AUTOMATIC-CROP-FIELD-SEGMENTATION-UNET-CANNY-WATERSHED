@@ -55,7 +55,7 @@ essere organizzate in una unica directory che verrà utilizzata per training o f
 
 ## 2.1 U-Net Training 
 
-Questo script Python utilizza TensorFlow per addestrare una rete neurale U-Net. La rete è ottimizzata per funzionare su hardware GPU, sfruttando la precisione mista e la gestione dinamica della memoria per migliorare efficienza e prestazioni.
+Lo script Python `unet_v2_1.py` utilizza TensorFlow per addestrare una rete neurale U-Net. La rete è ottimizzata per funzionare su hardware GPU, sfruttando la precisione mista e la gestione dinamica della memoria per migliorare efficienza e prestazioni.
 
 ### Funzionalità
 - **Training con Precisione Mista**: Impiega tipi di dati a 16-bit e 32-bit durante il training, riducendo il consumo di memoria e accelerando il processo.
@@ -150,7 +150,42 @@ Il modello viene valutato utilizzando metriche standard come IoU (Jaccard index)
 ### Visualizzazione dei Risultati
 Grafici della precisione, Loss, IoU e altre metriche vengono generati usando Matplotlib per visualizzare la performance del modello nel corso del training.
 
-### Licenza
-Specificare la licenza sotto la quale il
+
+
+## 2.1 Fine-Tuning di U-Net pre-addestrata
+
+### Descrizione
+Lo script Python `Fine_tuning.py`  è destinato al fine-tuning di una rete U-Net già addestrata, per migliorarne la precisione su un nuovo dataset. A differenza del training da zero, il fine-tuning adatta un modello pre-addestrato per affinare ulteriormente le sue capacità predittive, sfruttando il sapere già acquisito.
+
+### Differenze Chiave dal Training da Zero
+- **Punto di Partenza**: Inizia con un modello che ha già imparato pattern significativi da un dataset simile o correlato, invece di iniziare con pesi casuali.
+- **Learning Rate**: Utilizza un learning rate molto più basso (0.0001 nel fine-tuning vs. tipicamente 0.001 nel training da zero), per fare aggiustamenti più sottili ai pesi e prevenire la perdita di informazioni apprese precedentemente.
+- **Epochs**: Generalmente, meno epoche sono necessarie nel fine-tuning perché il modello non deve imparare da capo.
+- **Callbacks**: Configurazioni simili per le callbacks, ma con una soglia di tolleranza più bassa per l'early stopping e il reduce learning rate, riflettendo l'aspettativa di progressi più marginali e raffinati.
+
+### Prerequisiti
+Elenco delle dipendenze software come Python, TensorFlow, OpenCV, etc., rimane invariato rispetto allo script di training da zero.
+
+### Configurazione del Fine-Tuning
+#### Caricamento del Modello
+Carica un modello pre-addestrato specificando il percorso ai pesi salvati. Questo passo è cruciale per iniziare il fine-tuning su una base già solida.
+
+#### Preparazione dei Dati
+- **Input e Normalizzazione**: Le immagini sono caricate e normalizzate nello stesso modo del training da zero, ma la coerenza con il preprocessing del modello originale è vitale.
+
+#### Configurazione della Rete
+- **Ottimizzatore**: Usa `Adam` con un `learning_rate` di 0.0001 per minimizzare il rischio di disturbare l'apprendimento pregresso.
+- **Loss e Metriche**: Configura le funzioni di perdita e le metriche come nel training originale per mantenere la coerenza nelle valutazioni.
+
+### Gestione degli Input
+Specifica i percorsi e le procedure di caricamento e normalizzazione, come descritto nella sezione di preparazione dei dati.
+
+### Log e Salvataggio dei Pesi
+- **Logs**: Salva i log di TensorBoard per monitorare il fine-tuning secondo la stessa logica di directory descritta nello script di training da zero.
+- **Salvataggio dei Pesi**: I pesi sono salvati in una directory unica identificata da un timestamp, per distinguere i set di pesi fine-tuned da quelli del training originale.
+
+### Output del Training
+Genera e visualizza grafici di accuratezza, perdita, IoU, coefficiente di Dice, precisione e recall, permettendo una comparazione diretta con i risultati pre-fine-tuning.
+
 
 
