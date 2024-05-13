@@ -53,4 +53,104 @@ essere organizzate in una unica directory che verrà utilizzata per training o f
 
 - **Funzionamento:** Basta specificare il percorso della directory e il prefisso desiderato per processare tutti i file contenuti.
 
+## 2.1 U-Net Training 
+
+Questo script Python utilizza TensorFlow per addestrare una rete neurale U-Net. La rete è ottimizzata per funzionare su hardware GPU, sfruttando la precisione mista e la gestione dinamica della memoria per migliorare efficienza e prestazioni.
+
+### Funzionalità
+- **Training con Precisione Mista**: Impiega tipi di dati a 16-bit e 32-bit durante il training, riducendo il consumo di memoria e accelerando il processo.
+- **Gestione Dinamica della Memoria GPU**: Configura TensorFlow per allocare dinamicamente la memoria GPU, prevenendo l'allocazione di tutta la memoria inizialmente.
+- **Logging e Checkpointing Avanzati**: Implementa checkpointing automatico e logging dettagliato per monitorare il training e facilitare la ripresa del processo in caso di interruzione.
+
+
+### Prerequisiti
+- Python 3.x
+- TensorFlow 2.x
+- OpenCV
+- NumPy
+- Matplotlib
+- tifffile
+- scikit-image
+- PIL
+
+
+### Preparazione del Dataset
+Il dataset deve essere composto da immagini  a 3 canali e le corrispondenti maschere di segmentazione. Le immagini vengono caricate e pre-elaborate come segue:
+
+- **Caricamento**: Le immagini e le maschere vengono caricate utilizzando `tifffile` per supportare formati TIFF a canali plurimi.
+- **Normalizzazione**: Le immagini vengono normalizzate dividendo per il massimo valore specifico del canale per portarle nel range [0, 1].
+- **Splitting Manuale**: Il dataset viene diviso in set di training e validazione utilizzando una porzione predefinita del dataset originale per la validazione. Questo splitting è basato su un indice casuale che separa il 10% dei dati per la validazione.
+
+### Architettura della Rete
+La rete U-Net è configurata con blocchi convoluzionali che comprendono:
+
+- Doppie Convoluzioni 2D con attivazione ReLU e normalizzazione.
+- Max Pooling  per ridurre le dimensioni spaziali.
+- Convoluzioni Trasposte per l'upsampling e ricomposizione delle dimensioni iniziali.
+- Concatenazione con i corrispondenti output del percorso di contrazione per preservare le informazioni contestuali.
+
+L'ultimo strato utilizza una convoluzione 2D per mappare le caratteristiche all'immagine di segmentazione finale.
+
+### Configurazione dell'Ottimizzatore
+Il modello utilizza l'ottimizzatore Adam con i seguenti parametri:
+
+- **Learning Rate**: 0.001 iniziale, con riduzione dinamica basata sul plateau del validation loss, fino a 10e-5
+- **Loss Function**: Binary Focal Crossentropy, per gestire il disbilanciamento tra le classi.
+
+### Training
+Il modello viene addestrato con le seguenti specifiche:
+
+- **Batch Size**: 4 (variabile sulla base dell'hardware a disposizione)
+- **Epochs**: 100 (70 sono più che sufficienti
+- **Callbacks**: EarlyStopping, ReduceLROnPlateau, ModelCheckpoint per salvare i migliori pesi, e TensorBoard per il monitoring.
+Certamente! Ecco una descrizione dettagliata su come vengono gestiti gli input, nonché il salvataggio dei log di TensorBoard e dei pesi del modello nel tuo script di training U-Net.
+
+### Gestione degli Input
+
+Per l'addestramento della rete U-Net, gli input devono essere organizzati in modo specifico. Il codice prevede la specificazione di directory per le immagini di input e per le maschere (labels) attraverso le variabili `input_images_directory` e `canny_masks_directory`. Queste directory devono contenere file immagine nel formato TIFF, pronti per essere caricati e preprocessati dallo script.
+
+Ecco come vengono specificate nel codice:
+
+```python
+base_directory = "path/to/dataset/base_directory"
+input_images_directory = os.path.join(base_directory, "input_images/*.tif")
+canny_masks_directory = os.path.join(base_directory, "labels/*.tif")
+```
+
+Queste variabili puntano alle directory dove sono situati rispettivamente gli input e le maschere. È importante che il percorso e il pattern siano correttamente configurati per corrispondere alla struttura dei file nel tuo sistema.
+
+### Salvataggio dei Log di TensorBoard e dei Pesi del Modello
+
+Il salvataggio dei log e dei pesi del modello è essenziale per monitorare il progresso dell'addestramento e per poter riprendere l'addestramento da un certo punto in caso di interruzione. Nel tuo script, queste operazioni sono gestite come segue:
+
+- **Directory dei Log**: I log di TensorBoard vengono salvati in una sottodirectory all'interno della directory `logs_unet`, la quale è a sua volta situata nella `base_directory`. La sottodirectory per ogni sessione di training è nominata con un timestamp per garantire l'unicità e per facilitare l'identificazione della sessione di addestramento corrispondente.
+
+```python
+logs_directory = os.path.join(base_directory, "logs_unet")
+current_run_directory = os.path.join(logs_directory, f"BFC-{timestamp}")
+os.makedirs(current_run_directory, exist_ok=True)
+```
+
+- **Directory dei Pesi**: Analogamente ai log, i pesi del modello vengono salvati in una directory chiamata `weights_unet`, situata anch'essa nella `base_directory`. Anche qui, una sottodirectory specifica per ogni sessione di training viene creata usando lo stesso timestamp utilizzato per i log.
+
+```python
+weights_directory = os.path.join(base_directory, "weights_unet")
+weights_run_directory = os.path.join(weights_directory, f"BFC-{timestamp}")
+model_checkpoint_path = os.path.join(weights_run_directory, 'U-Net-Weights-BFCE.h5')
+os.makedirs(weights_run_directory, exist_ok=True)
+```
+
+Ogni modello viene salvato con il nome `U-Net-Weights-BFCE.h5` all'interno della sua specifica sottodirectory, facilitando così il recupero dei pesi per sessioni future o per l'analisi post-training.
+
+Questa struttura organizzativa non solo mantiene i file ordinati e facilmente accessibili, ma permette anche di eseguire più sessioni di addestramento in parallelo senza rischio di sovrascrivere dati importanti.
+
+### Valutazione e Metriche
+Il modello viene valutato utilizzando metriche standard come IoU (Jaccard index), Precision, Recall e Dice Coefficient. Queste metriche sono calcolate per ogni batch e visualizzate al termine di ogni epoca per il set di training e di validazione.
+
+### Visualizzazione dei Risultati
+Grafici della precisione, Loss, IoU e altre metriche vengono generati usando Matplotlib per visualizzare la performance del modello nel corso del training.
+
+### Licenza
+Specificare la licenza sotto la quale il
+
 
