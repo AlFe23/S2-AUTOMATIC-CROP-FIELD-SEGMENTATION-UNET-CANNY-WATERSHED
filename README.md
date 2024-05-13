@@ -43,7 +43,7 @@ Per utilizzare lo script, è necessario specificare il file di input, la dimensi
 ## 1.3 Rinominazione finale per input multipli 
 
 Al fine di poter costituire un dataset con input multipli, a cui però corrisponde sempre lo stesso output 
-(ricordiamo che la maschera di Canny è costituita sovrapponendo applicando l'omonimo filtro a immagini multiple),
+(ricordiamo che la maschera di Canny è costituita sovrapponendo maschere ottenute applicando l'omonimo filtro a immagini multiple),
 si è definita la semplice funzione `add_prefix_to_files` che aggiunge un determinato prefisso ai nomi di tutti i file contenuti 
 all'interno di una cartella specificata. In questa fase sperimentale sarà necessario aggiungere tale prefisso
 a tutte le cartelle contenenti le subtile di input; inoltre sarà necessario moltiplicare la cartella contenente 
