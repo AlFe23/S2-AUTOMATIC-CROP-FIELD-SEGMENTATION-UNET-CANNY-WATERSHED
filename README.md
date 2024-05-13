@@ -233,3 +233,34 @@ for i, predicted_mask in enumerate(predicted_masks):
 ```
 Le subtile predette avranno quindi la stessa logica di nominazione che hanno quelle di input. Questo è importante perchè è tramite la nomenclatura delle subtile che sarà facilmente ricostruire la maschera di output completa con lo script `ReMosaicker_overlap.py` descritto successivamente.
 Al termine dell'inferenza, le maschere predette saranno salvate nella directory specificata. Lo script fornisce feedback stampando il percorso della directory di output.
+
+
+
+## 2.4 Ricostruzione di Immagini integrali da Subtiles Predette con U-Net
+
+### Descrizione
+Lo script `ReMosaiker_overlap.py` Python è progettato per ricomporre un'immagine completa a partire da subtiles generate dalprocesso di inferenza utilizzando la rete U-Net. `ReMosaiker_overlap.py` gestisce la ricomposizione considerando gli overlap tra le subtiles.
+
+### Prerequisiti
+- Python
+- GDAL
+- NumPy
+- glob
+
+### Configurazione
+Per utilizzare questo script, è necessario specificare:
+- **Cartella dei Subtiles**: Il percorso della directory contenente i subtiles.
+- **Dimensione dei Tiles**: La dimensione dei subtiles (ad esempio, 256x256 pixels).
+- **Dimensione dell'Overlap**: La dimensione dell'overlap tra i subtiles (ad esempio, 32 pixels).
+- **File di Output**: Il percorso e il nome del file TIFF di output.
+
+ad esempio:
+
+```python
+subtiles_folder = "path/to/subtiles_directory"
+output_file = "path/to/output_directory/reconstructed_image.tif"
+tile_size = 256
+overlap_size = 32
+reconstruct_image(subtiles_folder, tile_size, overlap_size, output_file)
+```
+
