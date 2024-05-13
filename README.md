@@ -117,7 +117,7 @@ input_images_directory = os.path.join(base_directory, "input_images/*.tif")
 canny_masks_directory = os.path.join(base_directory, "labels/*.tif")
 ```
 
-Queste variabili puntano alle directory dove sono situati rispettivamente gli input e le maschere. È importante che il percorso e il pattern siano correttamente configurati per corrispondere alla struttura dei file nel tuo sistema.
+Queste variabili puntano alle directory dove sono situati rispettivamente gli input e le maschere.
 
 ### Salvataggio dei Log di TensorBoard e dei Pesi del Modello
 
@@ -140,7 +140,7 @@ model_checkpoint_path = os.path.join(weights_run_directory, 'U-Net-Weights-BFCE.
 os.makedirs(weights_run_directory, exist_ok=True)
 ```
 
-Ogni modello viene salvato con il nome `U-Net-Weights-BFCE.h5` all'interno della sua specifica sottodirectory, facilitando così il recupero dei pesi per sessioni future o per l'analisi post-training.
+Ogni modello viene salvato con il nome `U-Net-Weights-BFCE.h5` all'interno della sua specifica sottodirectory identificata dal timestamp, facilitando così il recupero dei pesi per sessioni future o per l'analisi post-training.
 
 Questa struttura organizzativa non solo mantiene i file ordinati e facilmente accessibili, ma permette anche di eseguire più sessioni di addestramento in parallelo senza rischio di sovrascrivere dati importanti.
 
