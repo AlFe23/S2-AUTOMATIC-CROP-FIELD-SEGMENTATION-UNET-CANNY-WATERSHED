@@ -4,7 +4,7 @@ Automatic software for crop field segmentation using Sentinel-2 satellite images
 
 ## 1.1 Preparazione del Dataset con GEE
 
-Tramite lo script per GEE ('Canny_Multitemporale_standard') si genera un dataset aventi le seguenti caratteristiche:
+Tramite lo script per GEE `Canny_Multitemporale_standard` si genera un dataset aventi le seguenti caratteristiche:
 
 **Geotiff uint16 composto da 3 canali (B2, NDVI, NDWI)**, generato da immagini Sentinel-2 L2A multi-temporali completamente cloud-free, compressi LZW, proiettati in EPSG:4326 - WGS 84. Il numero di immagini per cui viene generato il download dipende dal numero di immagini cloud-free (cl.cov.<0.5%) disponibili nell’arco temporale specificato.
 
@@ -20,10 +20,24 @@ Nella preparazione del dataset per il training UNet è importante riscalare i va
 
 ## 1.2 Binarizzazione Maschera di Canny Multitemporale
 Una volta ottenute le Maschere multitemporali di Canny, è necessario binarizzarle tramite lo script 'canny_binarizer.py' prima di poterle utilizzare per l'addestramento della U-Net'
-Questo script è un estratto dello script 'canny_cleaner_v3.py', solo la prima parter dove viene effettuato il thresholding è mantenuta in questa parte.
+Questo script è un estratto dello script `canny_cleaner_v3.py`, solo la prima parter dove viene effettuato il thresholding è mantenuta in questa parte.
 
 **Input:**
    - Maschera Canny Multitemporale uint8 in scala di grigi (ottenuta da GEE)
 
 **Output:**
    - Maschera di Canny binarizzata (0 == bordo ; 255 == non bordo)
+
+## 1.3 Suddivisione training i/o in Sub-Tiles 
+
+Lo script `new_subtiler_wOverlap.py` è progettato per preparare le immagini in tile da 256x256 pixel per il training della rete U-Net, partendo da immagini binarizzate con `canny_binarizer.py`. Lo script supporta immagini sia a 1 che a 3 canali e salva le subtiles in una nuova cartella generata automaticamente. Questa operazione facilita la creazione di un dataset composto da diverse immagini di input.
+
+**Funzionalità:**
+- **Supporto Multicanale**: Gestisce immagini a 1 o 3 canali.
+- **Generazione Automatica di Cartelle**: Crea automaticamente una cartella nella stessa directory dell'immagine di input.
+- **Naming Intelligente**: Le subtiles vengono nominate in modo sistematico basato sulla loro posizione nella griglia di tile, con formati come `subtile_0_0`, `subtile_0_N`, fino a `subtile_M_N`; dove N è pari al numero di colonne dell'immagine diviso per 256, mentre M è pari al numero di righe dell'immagine di input diviso per 256.
+- **Gestione dell'Overlap**: Permette l'estrazione di subtiles considerando un overlap tra di esse.
+
+Per utilizzare lo script, è necessario specificare il file di input, la dimensione dei tile e la dimensione dell'overlap. 
+
+
