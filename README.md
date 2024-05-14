@@ -263,10 +263,11 @@ Per utilizzare questo script, è necessario specificare:
 ad esempio:
 
 ```python
-subtiles_folder = "path/to/subtiles_directory"
-output_file = "path/to/output_directory/reconstructed_image.tif"
+subtiles_folder = "path_to_your_subtiles_folder"
+original_geotiff = "path_to_original_geotiff"
+output_file = "path_to_output_file.tif"
 tile_size = 256
 overlap_size = 32
-reconstruct_image(subtiles_folder, tile_size, overlap_size, output_file)
+reconstruct_image(subtiles_folder, tile_size, overlap_size, output_file, original_geotiff)
 ```
 
