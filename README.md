@@ -303,5 +303,30 @@ Per utilizzare questo script, specificare il percorso del file di input come arg
 
 
 
-## 3.1 Segmantazione Growing-Regions con Watershed
+## 3.1 Segmantazione Growing-Regions con Watershed iterativo
+
+
+Lo script `iterativeWS_v2.py` implementa un approccio iterativo all'algoritmo di segmentazione watershed per l'identificazione di segmenti chiusi, ideale per la successiva poligonizzazione dei campi agricoli. Partendo dall'identificazione dei campi più grandi, passondo poi a quelli sempre più piccoli, l'aplicazione iterativa di questo metodo mira a minimizzare il rischio di oversegmentazione, migliorando la qualità e l'accuratezza della segmentazione in scenari complessi di immagini agricole.
+
+Dopo la generazione di una maschera di bordi binaria tramite un modello UNet e successive pulizie morfologiche, l'algoritmo watershed viene applicato per identificare aree chiuse che rappresentano campi agricoli. Utilizzando un approccio iterativo, il processo inizia con la ricerca di massimi locali su distanze maggiori per identificare i campi più grandi, per poi diminuire progressivamente la distanza minima di ricerca, consentendo di identificare campi più piccoli senza frammentare eccessivamente quelli più grandi.
+
+## Input
+
+- **File GeoTIFF**: Una maschera di bordi binaria pulita, ottenuta e preparata tramite processi precedenti. I bordi sono rappresentati con il valore 0, mentre le aree non bordo sono rappresentate con il valore 255.
+
+## Output
+
+- **File GeoTIFF**: Una serie di file GeoTIFF per ciascun round di segmentazione, contenenti etichette uniche per ciascun campo identificato. Ogni etichetta corrisponde a un segmento unico individuato durante quel round specifico di segmentazione.
+
+## Dettagli Tecnici delle Trasformazioni
+
+### Watershed Iterativo
+
+1. **distance_transform_edt**: Viene calcolata la trasformazione di distanza dall'immagine binaria, che serve per identificare i punti centrali dei potenziali campi, trovando i punti più distanti dai bordi e che rispettino una distanza reciproca minima.
+2. **Ricerca Massimi Locali**: Utilizzando `peak_local_max` di `skimage.feature`, vengono identificati i massimi locali che servono come marcatori per il watershed.
+3. **Analisi Componenti Connesse**: I picchi locali vengono analizzati per definire componenti connesse, che fungono da marcatori iniziali per il watershed.
+4. **Segmentazione Watershed**: Utilizzando la maschera binaria come maschera e i marcatori identificati come inizializzatori, il watershed è applicato per segmentare l'immagine.
+5. **Iterazione con Distanze Decrescenti**: Il processo viene ripetuto con distanza minima tra picchi picchi locali decrescenti per minimizzare la oversegmentazione.
+
+
 
