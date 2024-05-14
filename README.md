@@ -239,7 +239,13 @@ Al termine dell'inferenza, le maschere predette saranno salvate nella directory 
 ## 2.4 Ricostruzione di Immagini integrali da Subtiles Predette con U-Net
 
 ### Descrizione
-Lo script `ReMosaiker_overlap.py` Python è progettato per ricomporre un'immagine completa a partire da subtiles generate dalprocesso di inferenza utilizzando la rete U-Net. `ReMosaiker_overlap.py` gestisce la ricomposizione considerando gli overlap tra le subtiles.
+Lo script `ReMosaiker_overlap_v2.py` Python è progettato per ricomporre un'immagine completa a partire da subtiles generate dalprocesso di inferenza utilizzando la rete U-Net. `ReMosaiker_overlap_v2.py` gestisce la ricomposizione considerando gli overlap tra le subtiles basandosi sulla denominazione delle subtiles. In particolare la denominazione delle subtile contenute nella cartella di input deve essere del seguente tipo:
+
+- predicted_20211018_subtile_m_n.tif
+
+Dove ricordiamo che 'm' ed 'n' rappresentano rispettivamente la posizione in termine di riga e colonna del mosaico di tiles da 256x256 pixel.
+
+Nota: lo script legge le posizione a partire dalla terza posizione, dove le posizioni sono separate da '_'
 
 ### Prerequisiti
 - Python
