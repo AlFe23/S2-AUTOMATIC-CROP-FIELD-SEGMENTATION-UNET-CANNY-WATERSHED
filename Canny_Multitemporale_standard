@@ -8,23 +8,24 @@ Questa versione del codice fa in modo tale da scalare NDVI ed NDWI dall'interval
 To convert your NDVI and NDWI index data from float32 to uint16 while preserving the original information, you need to choose an appropriate scaling factor. This factor must map the original range of each index to the range that uint16 can represent (0 to 65535).
 */
 //Import the AOI - in un primo momento ci concentriamo sul Poligono-1
-var aoi = ee.FeatureCollection('users/segmentation/Bothaville')
+var aoi = ee.FeatureCollection('users/segmentation/T32TPQ');
 Map.addLayer(aoi, {color: 'green', strokeWidth: 5}, 'AOI ', true, 0.6);
 Map.centerObject(aoi, 9);
 
-var TILE = '35JMK'
-var EPSG = '32735'
-var ORBIT = 35
-var FOLDER = 'UNET_DATASET_BOTHAVILLE'
-var CANNY_NAME = 'BOTHAVILLE_35JMK_canny_2021_NDVIth017_sigma1dot5_NDWIth018_sigmaNDWI1dot5_optimized'
-var NDVI_th = 0.17
-var NDVI_sigma = 1.5
+var TILE = '32TPQ'
+var EPSG = '32632' //per l'output
+var ORBIT = 22
+var FOLDER = 'UNET_DATASET_EMILIA'
+var CANNY_NAME = 'EMILIA_32TPQ_canny_2020_NDVIth020_sigma2dot0_NDWIth020_sigmaNDWI2dot0_optimized'
+var NDVI_th = 0.2
+var NDVI_sigma = 2.0
 var NDWI_th = 0.2
-var NDWI_sigma = 1.5
+var NDWI_sigma = 2.0
 
 // Define dates of interest
-var start = ee.Date('2021-04-01');
-var end = ee.Date('2021-11-30');
+var start = ee.Date('2020-04-01');
+var end = ee.Date ('2020-11-30');
+
 /*
 //function that adds the NDVI as a new band to the image
 function addnd(input) {
@@ -87,7 +88,7 @@ Map.addLayer(ee.Image(listOfImages.get(7)), {bands: 'B4,B3,B2', min: 0, max: 230
 
 var s2clearsky = ee.ImageCollection('COPERNICUS/S2_SR')
   .filterMetadata('CLOUDY_PIXEL_PERCENTAGE', 'less_than', 0.5)
-  .filterMetadata('MGRS_TILE', 'equals', '35JMK') // necessario evitare tiles 20JML che coprono solo parzialmente la zona di interesse
+  .filterMetadata('MGRS_TILE', 'equals',TILE) // necessario evitare tiles 20JML che coprono solo parzialmente la zona di interesse
   .filter(ee.Filter.eq('SENSING_ORBIT_NUMBER', ORBIT))
   .map(addnd)
   .map(addndwi)
@@ -306,7 +307,7 @@ Map.addLayer(ee.Image(listOfImages_sortedCollection_clearsky.get(8)), {bands: 'B
 
 print(listOfImages_sortedCollection_clearsky)
 
-var listOfImages_scaled_sortedCollection_clearsky = sortedCollection.toList(sortedCollection.size());
+var listOfImages_scaled_sortedCollection_clearsky = scaledCollection.toList(scaledCollection.size());
 
 
 var img = ee.Image(listOfImages_scaled_sortedCollection_clearsky.get(0))
