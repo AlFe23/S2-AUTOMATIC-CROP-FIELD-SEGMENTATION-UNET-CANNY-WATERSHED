@@ -38,7 +38,7 @@ Automatic software for crop field segmentation using Sentinel-2 satellite images
    - 2.4 Ricostruzione di Immagini Integrali da Subtiles Predette con U-Net
    - 2.5 Pulizia della Maschera Predetta con Trasformazioni Morfologiche
 
-3. **Segmentazione Avanzata**
+3. **Segmentazione Watershed e Poligonizzazione**
    - 3.1 Segmentazione Growing-Regions con Watershed Iterativo
      - 3.1.1 Descrizione
      - 3.1.2 Input
@@ -355,7 +355,7 @@ Le seguenti trasformazioni morfologiche sono eseguite sull'immagine, con l'obiet
 Per utilizzare questo script, specificare il percorso del file di input come argomento del comando e eseguire lo script. Il risultato sarà la generazione di un file GeoTIFF pulito nel percorso specificato.
 
 
-## 3. **Segmentazione Avanzata**
+## 3. **Segmentazione Watershed e Poligonizzazione**
    
 ## 3.1 Segmantazione Growing-Regions con Watershed iterativo
 
