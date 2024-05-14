@@ -1,3 +1,51 @@
+
+### Indice
+1. **Preparazione del Dataset**
+   - 1.1 Preparazione del Dataset con GEE
+   - 1.2 Binarizzazione della Maschera di Canny Multitemporale
+   - 1.3 Suddivisione Training I/O in Sub-Tiles
+   - 1.4 Rinominazione finale per input multipli
+
+2. **Training di U-Net**
+   - 2.1 U-Net Training
+     - 2.1.1 Funzionalità
+     - 2.1.2 Prerequisiti
+     - 2.1.3 Preparazione del Dataset
+     - 2.1.4 Architettura della Rete
+     - 2.1.5 Configurazione dell'Ottimizzatore
+     - 2.1.6 Training
+     - 2.1.7 Gestione degli Input
+     - 2.1.8 Salvataggio dei Log di TensorBoard e dei Pesi del Modello
+     - 2.1.9 Valutazione e Metriche
+     - 2.1.10 Visualizzazione dei Risultati
+   - 2.2 Fine-Tuning di U-Net Pre-addestrata
+     - 2.2.1 Descrizione
+     - 2.2.2 Differenze Chiave dal Training da Zero
+     - 2.2.3 Prerequisiti
+     - 2.2.4 Configurazione del Fine-Tuning
+     - 2.2.5 Gestione degli Input
+     - 2.2.6 Log e Salvataggio dei Pesi
+     - 2.2.7 Output del Training
+   - 2.3 Inferenza con U-Net su Nuovi Dati
+     - 2.3.1 Prerequisiti
+     - 2.3.2 Configurazione
+     - 2.3.3 Preparazione del Dataset
+     - 2.3.4 Esecuzione dell'Inferenza
+     - 2.3.5 Salvataggio delle Maschere Predette
+   - 2.4 Ricostruzione di Immagini Integrali da Subtiles Predette con U-Net
+   - 2.5 Pulizia della Maschera Predetta con Trasformazioni Morfologiche
+
+3. **Segmentazione Avanzata**
+   - 3.1 Segmentazione Growing-Regions con Watershed Iterativo
+     - 3.1.1 Descrizione
+     - 3.1.2 Input
+     - 3.1.3 Output
+     - 3.1.4 Watershed Iterativo
+   - 3.2 Poligonizzazione dei Segmenti Watershed
+     - 3.2.1 Descrizione
+     - 3.2.2 Dettagli Tecnici
+
+
 # AUTOMATIC-CROP-FIELD-SEGMENTATION-USING-UNET-CANNY-WATERSHED
 Automatic software for crop field segmentation using Sentinel-2 satellite images. This tool leverages a UNet architecture, trained on  multitemporal Canny filter images, and watershed algorithm, to deliver high-precision segmentation. Ideal for agricultural researchers and GIS specialists seeking efficient and scalable solutions.
 
@@ -57,13 +105,13 @@ essere organizzate in una unica directory che verrà utilizzata per training o f
 
 Lo script Python `unet_v2_1.py` utilizza TensorFlow per addestrare una rete neurale U-Net. La rete è ottimizzata per funzionare su hardware GPU, sfruttando la precisione mista e la gestione dinamica della memoria per migliorare efficienza e prestazioni.
 
-### Funzionalità
+### 2.1.1 Funzionalità
 - **Training con Precisione Mista**: Impiega tipi di dati a 16-bit e 32-bit durante il training, riducendo il consumo di memoria e accelerando il processo.
 - **Gestione Dinamica della Memoria GPU**: Configura TensorFlow per allocare dinamicamente la memoria GPU, prevenendo l'allocazione di tutta la memoria inizialmente.
 - **Logging e Checkpointing Avanzati**: Implementa checkpointing automatico e logging dettagliato per monitorare il training e facilitare la ripresa del processo in caso di interruzione.
 
 
-### Prerequisiti
+### 2.1.2 Prerequisiti
 - Python 3.x
 - TensorFlow 2.x
 - OpenCV
@@ -74,14 +122,14 @@ Lo script Python `unet_v2_1.py` utilizza TensorFlow per addestrare una rete neur
 - PIL
 
 
-### Preparazione del Dataset
+### 2.1.3 Preparazione del Dataset
 Il dataset deve essere composto da immagini  a 3 canali e le corrispondenti maschere di segmentazione. Le immagini vengono caricate e pre-elaborate come segue:
 
 - **Caricamento**: Le immagini e le maschere vengono caricate utilizzando `tifffile` per supportare formati TIFF a canali plurimi.
 - **Normalizzazione**: Le immagini vengono normalizzate dividendo per il massimo valore specifico del canale per portarle nel range [0, 1].
 - **Splitting Manuale**: Il dataset viene diviso in set di training e validazione utilizzando una porzione predefinita del dataset originale per la validazione. Questo splitting è basato su un indice casuale che separa il 10% dei dati per la validazione.
 
-### Architettura della Rete
+### 2.1.4 Architettura della Rete
 La rete U-Net è configurata con blocchi convoluzionali che comprendono:
 
 - Doppie Convoluzioni 2D con attivazione ReLU e normalizzazione.
@@ -91,13 +139,13 @@ La rete U-Net è configurata con blocchi convoluzionali che comprendono:
 
 L'ultimo strato utilizza una convoluzione 2D per mappare le caratteristiche all'immagine di segmentazione finale.
 
-### Configurazione dell'Ottimizzatore
+### 2.1.5 Configurazione dell'Ottimizzatore
 Il modello utilizza l'ottimizzatore Adam con i seguenti parametri:
 
 - **Learning Rate**: 0.001 iniziale, con riduzione dinamica basata sul plateau del validation loss, fino a 10e-5
 - **Loss Function**: Binary Focal Crossentropy, per gestire il disbilanciamento tra le classi.
 
-### Training
+### 2.1.6 Training
 Il modello viene addestrato con le seguenti specifiche:
 
 - **Batch Size**: 4 (variabile sulla base dell'hardware a disposizione)
@@ -105,7 +153,7 @@ Il modello viene addestrato con le seguenti specifiche:
 - **Callbacks**: EarlyStopping, ReduceLROnPlateau, ModelCheckpoint per salvare i migliori pesi, e TensorBoard per il monitoring.
 
 
-### Gestione degli Input
+### 2.1.7 Gestione degli Input
 
 Per l'addestramento della rete U-Net, gli input devono essere organizzati in modo specifico. Il codice prevede la specificazione di directory per le immagini di input e per le maschere (labels) attraverso le variabili `input_images_directory` e `canny_masks_directory`. Queste directory devono contenere file immagine nel formato TIFF, pronti per essere caricati e preprocessati dallo script.
 
@@ -119,7 +167,7 @@ canny_masks_directory = os.path.join(base_directory, "labels/*.tif")
 
 Queste variabili puntano alle directory dove sono situati rispettivamente gli input e le maschere.
 
-### Salvataggio dei Log di TensorBoard e dei Pesi del Modello
+### 2.1.8 Salvataggio dei Log di TensorBoard e dei Pesi del Modello
 
 Il salvataggio dei log e dei pesi del modello è essenziale per monitorare il progresso dell'addestramento e per poter riprendere l'addestramento da un certo punto in caso di interruzione. Nel tuo script, queste operazioni sono gestite come segue:
 
@@ -144,64 +192,64 @@ Ogni modello viene salvato con il nome `U-Net-Weights-BFCE.h5` all'interno della
 
 Questa struttura organizzativa non solo mantiene i file ordinati e facilmente accessibili, ma permette anche di eseguire più sessioni di addestramento in parallelo senza rischio di sovrascrivere dati importanti.
 
-### Valutazione e Metriche
+### 2.1.9 Valutazione e Metriche
 Il modello viene valutato utilizzando metriche standard come IoU (Jaccard index), Precision, Recall e Dice Coefficient. Queste metriche sono calcolate per ogni batch e visualizzate al termine di ogni epoca per il set di training e di validazione.
 
-### Visualizzazione dei Risultati
+### 2.1.10 Visualizzazione dei Risultati
 Grafici della precisione, Loss, IoU e altre metriche vengono generati usando Matplotlib per visualizzare la performance del modello nel corso del training.
 
 
 
 ## 2.2 Fine-Tuning di U-Net pre-addestrata
 
-### Descrizione
+### 2.2.1 Descrizione
 Lo script Python `Fine_tuning.py`  è destinato al fine-tuning di una rete U-Net già addestrata, per migliorarne la precisione su un nuovo dataset. A differenza del training da zero, il fine-tuning adatta un modello pre-addestrato per affinare ulteriormente le sue capacità predittive, sfruttando il sapere già acquisito.
 
-### Differenze Chiave dal Training da Zero
+### 2.2.2 Differenze Chiave dal Training da Zero
 - **Punto di Partenza**: Inizia con un modello che ha già imparato pattern significativi da un dataset simile o correlato, invece di iniziare con pesi casuali.
 - **Learning Rate**: Utilizza un learning rate molto più basso (0.0001 nel fine-tuning vs. tipicamente 0.001 nel training da zero), per fare aggiustamenti più sottili ai pesi e prevenire la perdita di informazioni apprese precedentemente.
 - **Epochs**: Generalmente, meno epoche sono necessarie nel fine-tuning perché il modello non deve imparare da capo.
 - **Callbacks**: Configurazioni simili per le callbacks, ma con una soglia di tolleranza più bassa per l'early stopping e il reduce learning rate, riflettendo l'aspettativa di progressi più marginali e raffinati.
 
-### Prerequisiti
+### 2.2.3 Prerequisiti
 Elenco delle dipendenze software come Python, TensorFlow, OpenCV, etc., rimane invariato rispetto allo script di training da zero.
 
-### Configurazione del Fine-Tuning
+### 2.2.4 Configurazione del Fine-Tuning
 #### Caricamento del Modello
 Carica un modello pre-addestrato specificando il percorso ai pesi salvati. Questo passo è cruciale per iniziare il fine-tuning su una base già solida.
 
-#### Preparazione dei Dati
+####  Preparazione dei Dati
 - **Input e Normalizzazione**: Le immagini sono caricate e normalizzate nello stesso modo del training da zero, ma la coerenza con il preprocessing del modello originale è vitale.
 
-#### Configurazione della Rete
+####  Configurazione della Rete
 - **Ottimizzatore**: Usa `Adam` con un `learning_rate` di 0.0001 per minimizzare il rischio di disturbare l'apprendimento pregresso.
 - **Loss e Metriche**: Configura le funzioni di perdita e le metriche come nel training originale per mantenere la coerenza nelle valutazioni.
 
-### Gestione degli Input
+### 2.2.5 Gestione degli Input
 Specifica i percorsi e le procedure di caricamento e normalizzazione, come descritto nella sezione di preparazione dei dati dello script di training da zero.
 
-### Log e Salvataggio dei Pesi
+### 2.2.6 Log e Salvataggio dei Pesi
 - **Logs**: Salva i log di TensorBoard per monitorare il fine-tuning secondo la stessa logica di directory descritta nello script di training da zero.
 - **Salvataggio dei Pesi**: I pesi sono salvati in una directory unica identificata da un timestamp, per distinguere i set di pesi fine-tuned da quelli del training originale.
 
-### Output del Training
+### 2.2.7 Output del Training
 Genera e visualizza grafici di accuratezza, perdita, IoU, coefficiente di Dice, precisione e recall, permettendo una comparazione diretta con i risultati pre-fine-tuning.
 
 ## 2.3 Inferenza con U-Net su Nuovi Dati
 
 Lo script `inference.py` esegue l'inferenza su un nuovo set di dati utilizzando un modello U-Net precedentemente addestrato.  L'obiettivo è generare maschere di segmentazione per singole immagini Sentinel-2 di input, applicando lo stesso preprocessing utilizzato nel training per garantire la coerenza dei risultati.
 
-### Prerequisiti
+### 2.3.1 Prerequisiti
 - Python 3.x
 - TensorFlow 2.x
 - tifffile
 - NumPy
 
-### Configurazione
+### 2.3.2 Configurazione
 - **Disabilitazione GPU**: Per impostazione predefinita, lo script esegue l'inferenza utilizzando la CPU. Questo può essere modificato rimuovendo o commentando la linea `os.environ['CUDA_VISIBLE_DEVICES'] = '-1'`.
 - **Modello Pre-addestrato**: Assicurati che il percorso al modello salvato sia corretto e accessibile dallo script.
 
-### Preparazione del Dataset
+### 2.3.3 Preparazione del Dataset
 Il dataset per l'inferenza deve essere preparato con lo stesso preprocessing usato per il training:
 - **Caricamento Immagini**: Le immagini devono essere caricate dalla directory specificata.
 - **Normalizzazione**: Le immagini vengono normalizzate nello stesso modo in cui sono state normalizzate durante il training.
@@ -218,11 +266,11 @@ def load_and_preprocess_images(directory):
     return images, image_paths
 ```
 
-### Esecuzione dell'Inferenza
+### 2.3.4 Esecuzione dell'Inferenza
 - **Carica e Preprocessa le Nuove Immagini**: Utilizza la funzione `load_and_preprocess_images` per preparare i dati.
 - **Esecuzione del Modello**: Applica il modello alle immagini preprocessate per generare le previsioni.
 
-### Salvataggio delle Maschere Predette
+### 2.3.5 Salvataggio delle Maschere Predette
 Ogni maschera predetta viene salvata in una directory di output specificata, utilizzando un formato che facilita l'identificazione:
 
 ```python
@@ -305,20 +353,21 @@ Per utilizzare questo script, specificare il percorso del file di input come arg
 
 ## 3.1 Segmantazione Growing-Regions con Watershed iterativo
 
+### 3.1.1 Descrizione
 
 Lo script `iterativeWS_v2.py` implementa un approccio iterativo all'algoritmo di segmentazione watershed per l'identificazione di segmenti chiusi, ideale per la successiva poligonizzazione dei campi agricoli. Partendo dall'identificazione dei campi più grandi, passondo poi a quelli sempre più piccoli, l'aplicazione iterativa di questo metodo mira a minimizzare il rischio di oversegmentazione, migliorando la qualità e l'accuratezza della segmentazione in scenari complessi di immagini agricole.
 
 Dopo la generazione di una maschera di bordi binaria tramite un modello UNet e successive pulizie morfologiche, l'algoritmo watershed viene applicato per identificare aree chiuse che rappresentano campi agricoli. Utilizzando un approccio iterativo, il processo inizia con la ricerca di massimi locali su distanze maggiori per identificare i campi più grandi, per poi diminuire progressivamente la distanza minima di ricerca, consentendo di identificare campi più piccoli senza frammentare eccessivamente quelli più grandi.
 
-### Input
+### 3.1.2 Input
 
 - **File GeoTIFF**: Una maschera di bordi binaria pulita, ottenuta e preparata tramite processi precedenti. I bordi sono rappresentati con il valore 0, mentre le aree non bordo sono rappresentate con il valore 255.
 
-### Output
+### 3.1.3 Output
 
 - **File GeoTIFF**: Una serie di file GeoTIFF per ciascun round di segmentazione, contenenti etichette uniche per ciascun campo identificato. Ogni etichetta corrisponde a un segmento unico individuato durante quel round specifico di segmentazione.
 
-### Watershed Iterativo
+### 3.1.4 Watershed Iterativo
 
 1. **distance_transform_edt**: Viene calcolata la trasformazione di distanza dall'immagine binaria, che serve per identificare i punti centrali dei potenziali campi, trovando i punti più distanti dai bordi e che rispettino una distanza reciproca minima.
 2. **Ricerca Massimi Locali**: Utilizzando `peak_local_max` di `skimage.feature`, vengono identificati i massimi locali che servono come marcatori per il watershed.
@@ -331,13 +380,13 @@ Dopo la generazione di una maschera di bordi binaria tramite un modello UNet e s
 
 Questo script converte i segmenti chiusi e unici, identificati attraverso l'algoritmo di segmentazione watershed, in poligoni vettoriali. L'obiettivo è facilitare analisi successive e operazioni di GIS, convertendo le maschere raster in formati vettoriali più utilizzabili per applicazioni di mappatura e monitoraggio agricolo.
 
-### Descrizione
+### 3.2.1 Descrizione
 
 Dopo aver completato la segmentazione watershed dei campi agricoli, il passo successivo è poligonizzare questi segmenti. Questo script poligonizza il raster dei segmenti unici, ovvero i labels unici generati dall'algoritmo watershed, in un formato vettoriale (Shapefile), che è più adatto per analisi successive
 
 Il processo utilizza la libreria GDAL per leggere un raster di input, che rappresenta la maschera di segmentazione watershed, e produce un file Shapefile che contiene poligoni corrispondenti a ciascun segmento unico identificato.
 
-### Dettagli Tecnici
+### 3.2.2 Dettagli Tecnici
 
 - **Maschera di Input**: Un raster dove ogni valore unico rappresenta un segmento distinto.
 - **File Shapefile**: Uno Shapefile che contiene i poligoni di ciascun segmento identificato. Ogni poligono ha un attributo 'Label' che corrisponde all'etichetta del segmento nel raster di input.
