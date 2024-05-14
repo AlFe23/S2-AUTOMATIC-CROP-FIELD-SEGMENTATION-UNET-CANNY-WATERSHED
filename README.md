@@ -1,3 +1,6 @@
+# AUTOMATIC-CROP-FIELD-SEGMENTATION-USING-UNET-CANNY-WATERSHED
+Automatic software for crop field segmentation using Sentinel-2 satellite images. This tool leverages a UNet architecture, trained on  multitemporal Canny filter images, and watershed algorithm, to deliver high-precision segmentation. Ideal for agricultural researchers and GIS specialists seeking efficient and scalable solutions.
+
 
 ### Indice
 1. **Preparazione del Dataset**
@@ -6,7 +9,7 @@
    - 1.3 Suddivisione Training I/O in Sub-Tiles
    - 1.4 Rinominazione finale per input multipli
 
-2. **Training di U-Net**
+2. **Segmentazione con UNet**
    - 2.1 U-Net Training
      - 2.1.1 Funzionalità
      - 2.1.2 Prerequisiti
@@ -46,9 +49,9 @@
      - 3.2.2 Dettagli Tecnici
 
 
-# AUTOMATIC-CROP-FIELD-SEGMENTATION-USING-UNET-CANNY-WATERSHED
-Automatic software for crop field segmentation using Sentinel-2 satellite images. This tool leverages a UNet architecture, trained on  multitemporal Canny filter images, and watershed algorithm, to deliver high-precision segmentation. Ideal for agricultural researchers and GIS specialists seeking efficient and scalable solutions.
 
+
+## 1. **Preparazione del Dataset**
 
 ## 1.1 Preparazione del Dataset con GEE
 
@@ -101,6 +104,8 @@ essere organizzate in una unica directory che verrà utilizzata per training o f
 
 - **Funzionamento:** Basta specificare il percorso della directory e il prefisso desiderato per processare tutti i file contenuti.
 
+## 2. **Segmentazione con UNet**
+ 
 ## 2.1 U-Net Training 
 
 Lo script Python `unet_v2_1.py` utilizza TensorFlow per addestrare una rete neurale U-Net. La rete è ottimizzata per funzionare su hardware GPU, sfruttando la precisione mista e la gestione dinamica della memoria per migliorare efficienza e prestazioni.
@@ -350,7 +355,8 @@ Le seguenti trasformazioni morfologiche sono eseguite sull'immagine, con l'obiet
 Per utilizzare questo script, specificare il percorso del file di input come argomento del comando e eseguire lo script. Il risultato sarà la generazione di un file GeoTIFF pulito nel percorso specificato.
 
 
-
+## 3. **Segmentazione Avanzata**
+   
 ## 3.1 Segmantazione Growing-Regions con Watershed iterativo
 
 ### 3.1.1 Descrizione
