@@ -371,7 +371,7 @@ Dopo la generazione di una maschera di bordi binaria tramite un modello UNet e s
 
 ### 3.1.3 Output
 
-- **File GeoTIFF**: Una serie di file GeoTIFF per ciascun round di segmentazione, contenenti etichette uniche per ciascun campo identificato. Ogni etichetta corrisponde a un segmento unico individuato durante quel round specifico di segmentazione.
+- **File GeoTIFF**: Una serie di file GeoTIFF per ciascun round di segmentazione, contenenti labels uniche per ciascun campo identificato. Ogni label corrisponde a un segmento unico individuato durante quel round specifico di segmentazione.
 
 ### 3.1.4 Watershed Iterativo
 
@@ -395,7 +395,7 @@ Il processo utilizza la libreria GDAL per leggere un raster di input, che rappre
 ### 3.2.2 Dettagli Tecnici
 
 - **Maschera di Input**: Un raster dove ogni valore unico rappresenta un segmento distinto.
-- **File Shapefile**: Uno Shapefile che contiene i poligoni di ciascun segmento identificato. Ogni poligono ha un attributo 'Label' che corrisponde all'etichetta del segmento nel raster di input.
+- **File Shapefile**: Uno Shapefile che contiene i poligoni di ciascun segmento identificato. Ogni poligono ha un attributo 'Label' che corrisponde all'label del segmento nel raster di input.
 
 
 
