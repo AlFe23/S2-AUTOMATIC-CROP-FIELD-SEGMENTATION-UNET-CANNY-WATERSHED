@@ -271,3 +271,37 @@ overlap_size = 32
 reconstruct_image(subtiles_folder, tile_size, overlap_size, output_file, original_geotiff)
 ```
 
+
+
+## 2.5 Pulizia della maschera predetta con trasformazioni morfologiche
+
+Lo script `unet_output_cleaner.py` è destinato alla pulizia della maschera binaria dei bordi ottenuta dal modello UNet, dopo aver ricostruito l'immagine integrale. Prima di applicare ulteriori algoritmi di segmentazione come il watershed, è essenziale ripulire la maschera binaria da elementi di rumore e da bordi non effettivi attraverso l'uso di trasformazioni morfologiche.
+
+### Input
+
+Il file di input è una maschera binaria con valori 0 e 1 dove:
+- **0**: indica la presenza di un bordo
+- **1**: indica l'assenza di un bordo
+
+### Output
+
+Il file di output è una maschera binaria con valori 0 e 255 dove:
+- **0**: indica la presenza di un bordo
+- **255**: indica l'assenza di un bordo
+
+### Trasformazioni Morfologiche Applicate
+
+Le seguenti trasformazioni morfologiche sono eseguite sull'immagine, con l'obiettivo di migliorare la qualità della maschera per successive elaborazioni:
+
+1. **Opening**: Un'apertura morfologica (erosione seguita da una dilatazione) utilizzando un elemento strutturante di forma circolare con raggio di 2.5 pixel. Questo passaggio aiuta a rimuovere piccoli punti luminosi e a connettere piccole crepe scure.
+2. **Small Object Removal**: Rimozione di oggetti piccoli che sono più piccoli di 200 pixel, con connettività di tipo 2. Questo passaggio è fondamentale per eliminare componenti isolati che possono essere interpretati come rumore.
+3. **Small Object Removal su negativo**: Inversione della maschera per lavorare sui non-bordi come oggetti, seguita da una rimozione di piccoli oggetti dalla maschera invertita, impostando una soglia di dimensione minima di 80 pixel e connettività di tipo 2.
+
+### Utilizzo
+
+Per utilizzare questo script, specificare il percorso del file di input come argomento del comando e eseguire lo script. Il risultato sarà la generazione di un file GeoTIFF pulito nel percorso specificato.
+
+
+
+## 3.1 Segmantazione Growing-Regions con Watershed
+
