@@ -310,15 +310,13 @@ Lo script `iterativeWS_v2.py` implementa un approccio iterativo all'algoritmo di
 
 Dopo la generazione di una maschera di bordi binaria tramite un modello UNet e successive pulizie morfologiche, l'algoritmo watershed viene applicato per identificare aree chiuse che rappresentano campi agricoli. Utilizzando un approccio iterativo, il processo inizia con la ricerca di massimi locali su distanze maggiori per identificare i campi più grandi, per poi diminuire progressivamente la distanza minima di ricerca, consentendo di identificare campi più piccoli senza frammentare eccessivamente quelli più grandi.
 
-## Input
+### Input
 
 - **File GeoTIFF**: Una maschera di bordi binaria pulita, ottenuta e preparata tramite processi precedenti. I bordi sono rappresentati con il valore 0, mentre le aree non bordo sono rappresentate con il valore 255.
 
-## Output
+### Output
 
 - **File GeoTIFF**: Una serie di file GeoTIFF per ciascun round di segmentazione, contenenti etichette uniche per ciascun campo identificato. Ogni etichetta corrisponde a un segmento unico individuato durante quel round specifico di segmentazione.
-
-## Dettagli Tecnici delle Trasformazioni
 
 ### Watershed Iterativo
 
@@ -327,6 +325,24 @@ Dopo la generazione di una maschera di bordi binaria tramite un modello UNet e s
 3. **Analisi Componenti Connesse**: I picchi locali vengono analizzati per definire componenti connesse, che fungono da marcatori iniziali per il watershed.
 4. **Segmentazione Watershed**: Utilizzando la maschera binaria come maschera e i marcatori identificati come inizializzatori, il watershed è applicato per segmentare l'immagine.
 5. **Iterazione con Distanze Decrescenti**: Il processo viene ripetuto con distanza minima tra picchi picchi locali decrescenti per minimizzare la oversegmentazione.
+6. 
+
+## 3.2 Poligonizzazione dei Segmenti Watershed
+
+Questo script converte i segmenti chiusi e unici, identificati attraverso l'algoritmo di segmentazione watershed, in poligoni vettoriali. L'obiettivo è facilitare analisi successive e operazioni di GIS, convertendo le maschere raster in formati vettoriali più utilizzabili per applicazioni di mappatura e monitoraggio agricolo.
+
+### Descrizione
+
+Dopo aver completato la segmentazione watershed dei campi agricoli, il passo successivo è poligonizzare questi segmenti. Questo script poligonizza il raster dei segmenti unici, ovvero i labels unici generati dall'algoritmo watershed, in un formato vettoriale (Shapefile), che è più adatto per analisi successive
+
+Il processo utilizza la libreria GDAL per leggere un raster di input, che rappresenta la maschera di segmentazione watershed, e produce un file Shapefile che contiene poligoni corrispondenti a ciascun segmento unico identificato.
+
+### Dettagli Tecnici
+
+- **Maschera di Input**: Un raster dove ogni valore unico rappresenta un segmento distinto.
+- **File Shapefile**: Uno Shapefile che contiene i poligoni di ciascun segmento identificato. Ogni poligono ha un attributo 'Label' che corrisponde all'etichetta del segmento nel raster di input.
+
+
 
 
 
