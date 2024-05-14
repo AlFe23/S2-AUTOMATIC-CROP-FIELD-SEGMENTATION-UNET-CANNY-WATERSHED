@@ -86,10 +86,10 @@ Lo script `new_subtiler_wOverlap.py` è progettato per preparare le immagini in 
 **Funzionalità:**
 - **Supporto Multicanale**: Gestisce immagini a 1 o 3 canali.
 - **Generazione Automatica di Cartelle**: Crea automaticamente una cartella nella stessa directory dell'immagine di input.
-- **Naming Intelligente**: Le subtiles vengono nominate in modo sistematico basato sulla loro posizione nella griglia di tile, con formati come `subtile_0_0`, `subtile_0_N`, fino a `subtile_M_N`; dove N è pari al numero di colonne dell'immagine diviso per 256, mentre M è pari al numero di righe dell'immagine di input diviso per 256.
+- **Naming Intelligente**: Le subtiles vengono nominate in modo sistematico basato sulla loro posizione nella griglia di tiles, con formati come `subtile_0_0`, `subtile_0_N`, fino a `subtile_M_N`; dove N è pari al numero di colonne dell'immagine diviso per 256, mentre M è pari al numero di righe dell'immagine di input diviso per 256.
 - **Gestione dell'Overlap**: Permette l'estrazione di subtiles considerando un overlap tra di esse.
 
-Per utilizzare lo script, è necessario specificare il file di input, la dimensione dei tile e la dimensione dell'overlap. 
+Per utilizzare lo script, è necessario specificare il file di input, la dimensione delle tiles e la dimensione dell'overlap. 
 
 ## 1.3 Rinominazione finale per input multipli 
 
@@ -309,7 +309,7 @@ Nota: lo script legge le posizione a partire dalla terza posizione, dove le posi
 ### Configurazione
 Per utilizzare questo script, è necessario specificare:
 - **Cartella delle Subtiles**: Il percorso della directory contenente le subtiles.
-- **Dimensione dei Tiles**: La dimensione delle subtiles (ad esempio, 256x256 pixels).
+- **Dimensione delle Tiles**: La dimensione delle subtiles (ad esempio, 256x256 pixels).
 - **Dimensione dell'Overlap**: La dimensione dell'overlap tra le subtiles (ad esempio, 32 pixels).
 - **File di Output**: Il percorso e il nome del file TIFF di output.
 
