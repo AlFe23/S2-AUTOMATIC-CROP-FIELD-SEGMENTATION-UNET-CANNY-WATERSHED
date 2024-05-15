@@ -85,7 +85,7 @@ Lo script `new_subtiler_wOverlap.py` è progettato per preparare le immagini in 
 **Funzionalità:**
 - **Supporto Multicanale**: Gestisce immagini a 1 o 3 canali.
 - **Generazione Automatica di Cartelle**: Crea automaticamente una cartella nella stessa directory dell'immagine di input.
-- **Naming Intelligente**: Le subtiles vengono nominate in modo sistematico basato sulla loro posizione nella griglia di tiles, con formati come `subtile_0_0`, `subtile_0_N`, fino a `subtile_M_N`; dove `N` è pari al numero di colonne dell'immagine diviso per 256, mentre `M` è pari al numero di righe dell'immagine di input diviso per 256.
+- **Naming Intelligente**: Le subtiles vengono nominate in modo sistematico basato sulla loro posizione nella griglia di tiles, con formati come `prefixes_subtile_0_0`, `prefixes_subtile_0_N`, fino a `prefixes_subtile_M_N`; dove `N` è pari al numero di colonne dell'immagine diviso per 256, mentre `M` è pari al numero di righe dell'immagine di input diviso per 256.
 - **Gestione dell'Overlap**: Permette l'estrazione di subtiles considerando un overlap tra di esse.
 
 Per utilizzare lo script, è necessario specificare il file di input, la dimensione delle tiles e la dimensione dell'overlap. 
@@ -101,10 +101,8 @@ input_files = [
     input_img_path_4, ...
 ]
 
-prefix_name_list = ['prefix1_', 'prefix2_', 'prefix3_', 'prefix4_', ...]
+prefix_name_list = ['tilename1_data1', 'tilename1_data2', 'tilename1_data3', 'tilename1_data4', ...]
 ```
-
-This Markdown text should now be clearer and more systematically organized.
 
 nota: la data del prefisso è aggiunta anche all'interno del nome della cartella contenente le subtile di ogni immagine, questo per far si che venga prodotta una cartella diversa per ogni input canny, che è ripetuto in numero di volte pari al numero di immagini input a 3ch.
 
