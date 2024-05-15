@@ -115,21 +115,17 @@ write_geotiff(output_path_closed, opened_thresh, geotransform, projection)
 # Expects ar to be an array with labeled objects, and removes objects smaller than min_size. If ar is bool, the image is first labeled. This leads to potentially different behavior for bool and 0-and-1 arrays.
 
 thresh_filled=remove_small_objects(opened_thresh.astype(bool),min_size=200,connectivity=2).astype('uint8')
-output_path_filled = name.replace('.tif', '_thresh_opened_filledobj50p.tif')
+output_path_filled = name.replace('.tif', '_thresh_opened_filledobj.tif')
 write_geotiff(output_path_filled, thresh_filled, geotransform, projection)
 
 
-
-# thresh_filled_objrem=remove_small_holes(thresh_filled.astype(bool),area_threshold=50,connectivity=2).astype('uint8')
-# output_path_filled_objrem = name.replace('.tif', '_thresh_opened_filledobj50p_objrem50p.tif')
-# write_geotiff(output_path_filled, thresh_filled_objrem, geotransform, projection)
 
 #REMOVE SMALL OBJECTS NEGATIVE(applicato al negativo per rimuovere rumore di bordi incompleti)
 # Calculate the negative
 thresh_filled_inv = np.copy(thresh_filled)
 thresh_filled_inv[thresh_filled == 1] = 0
 thresh_filled_inv[thresh_filled == 0] = 255
-# output_path_filled_inv = name.replace('.tif', '_thresh_opened_filledobj50p_inv.tif')
+# output_path_filled_inv = name.replace('.tif', '_thresh_opened_filledobj_inv.tif')
 # write_geotiff(output_path_filled_inv, thresh_filled_inv, geotransform, projection)
 
 # Fill white holes in the negative mask of the previous one
