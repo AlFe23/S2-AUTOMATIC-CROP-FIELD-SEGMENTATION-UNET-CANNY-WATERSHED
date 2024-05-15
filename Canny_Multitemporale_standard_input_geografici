@@ -5,15 +5,15 @@ var TILE = '35JMK'
 var EPSG = '32735'
 var ORBIT = 35
 var FOLDER = 'UNET_DATASET_BOTHAVILLE'
-var CANNY_NAME = 'BOTHAVILLE_35JMK_canny_2021_NDVIth017_sigma1dot5_NDWIth020_sigmaNDWI1dot5_optimized'
-var NDVI_th = 0.17
-var NDVI_sigma = 1.5
+var CANNY_NAME = 'BOTHAVILLE_35JMK_canny_2020_NDVIth020_sigma1dot7_NDWIth020_sigmaNDWI2dot5_optimized'
+var NDVI_th = 0.20
+var NDVI_sigma = 1.7
 var NDWI_th = 0.2
-var NDWI_sigma = 1.5
+var NDWI_sigma = 2.5
 
 // Define dates of interest
-var start = ee.Date('2021-04-01');
-var end = ee.Date('2021-11-30');
+var start = ee.Date('2019-11-01');
+var end = ee.Date('2020-06-30');
 
 
 -------------------------------------------------------------------------
