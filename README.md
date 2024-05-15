@@ -7,7 +7,6 @@ Automatic software for crop field segmentation using Sentinel-2 satellite images
    - 1.1 Preparazione del Dataset con GEE
    - 1.2 Binarizzazione della Maschera di Canny Multitemporale
    - 1.3 Suddivisione Training I/O in Sub-Tiles
-   - 1.4 Rinominazione finale per input multipli
 
 2. **Segmentazione con UNet**
    - 2.1 U-Net Training
@@ -86,23 +85,26 @@ Lo script `new_subtiler_wOverlap.py` è progettato per preparare le immagini in 
 **Funzionalità:**
 - **Supporto Multicanale**: Gestisce immagini a 1 o 3 canali.
 - **Generazione Automatica di Cartelle**: Crea automaticamente una cartella nella stessa directory dell'immagine di input.
-- **Naming Intelligente**: Le subtiles vengono nominate in modo sistematico basato sulla loro posizione nella griglia di tiles, con formati come `subtile_0_0`, `subtile_0_N`, fino a `subtile_M_N`; dove N è pari al numero di colonne dell'immagine diviso per 256, mentre M è pari al numero di righe dell'immagine di input diviso per 256.
+- **Naming Intelligente**: Le subtiles vengono nominate in modo sistematico basato sulla loro posizione nella griglia di tiles, con formati come `subtile_0_0`, `subtile_0_N`, fino a `subtile_M_N`; dove `N` è pari al numero di colonne dell'immagine diviso per 256, mentre `M` è pari al numero di righe dell'immagine di input diviso per 256.
 - **Gestione dell'Overlap**: Permette l'estrazione di subtiles considerando un overlap tra di esse.
 
 Per utilizzare lo script, è necessario specificare il file di input, la dimensione delle tiles e la dimensione dell'overlap. 
 
-## 1.3 Rinominazione finale per input multipli 
+Rispetto alla versione precedente, questa versione aggiunge automaticamente un prefisso al nome delle tile, fornito in una lista di prefissi corrispondenti alla lista delle immagini di input.
 
-Al fine di poter costituire un dataset con input multipli, a cui però corrisponde sempre lo stesso output 
-(ricordiamo che la maschera di Canny è costituita sovrapponendo maschere ottenute applicando l'omonimo filtro a immagini multiple),
-si è definita la semplice funzione `add_prefix_to_files` che aggiunge un determinato prefisso ai nomi di tutti i file contenuti 
-all'interno di una cartella specificata. In questa fase sperimentale sarà necessario aggiungere tale prefisso
-a tutte le cartelle contenenti le subtile di input; inoltre sarà necessario moltiplicare la cartella contenente 
-le subtile di output, per un numero di volte pari al numero delle immagini di input, ed applicare fittizziamente
-il prefisso corrispondente a ciascun input, a ognuna delle cartelle di output. Infine tutte le coppie i/o possono 
-essere organizzate in una unica directory che verrà utilizzata per training o fine tuning.
+**Esempio:**
+```python
+input_files = [
+    input_img_path_1,
+    input_img_path_2, 
+    input_img_path_3, 
+    input_img_path_4, ...
+]
 
-- **Funzionamento:** Basta specificare il percorso della directory e il prefisso desiderato per processare tutti i file contenuti.
+prefix_name_list = ['prefix1_', 'prefix2_', 'prefix3_', 'prefix4_', ...]
+```
+
+This Markdown text should now be clearer and more systematically organized.
 
 ## 2. **Segmentazione con UNet**
  
