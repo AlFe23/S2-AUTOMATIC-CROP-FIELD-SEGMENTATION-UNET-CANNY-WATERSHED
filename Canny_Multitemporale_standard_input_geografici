@@ -72,6 +72,23 @@ var NDWI_sigma = 1.5
 var start = ee.Date('2021-04-01');
 var end = ee.Date('2021-10-30');
 
+-------------------------------------------------------------------------
+
+// TILE - AUSTRALIA
+
+var TILE = '55HDA'
+var EPSG = '32755' //per l'output
+var ORBIT = 73
+var FOLDER = 'UNET_DATASET_ALBURY'
+var CANNY_NAME = 'ALBURY_50SMC_canny_2021_NDVIth025_sigma1dot5_NDWIth020_sigmaNDWI1dot5_optimized'
+var NDVI_th = 0.25
+var NDVI_sigma = 1.5
+var NDWI_th = 0.25
+var NDWI_sigma = 1.5
+
+// Define dates of interest
+var start = ee.Date('2021-04-01');
+var end = ee.Date('2021-10-30');
 
 -------------------------------------------------------------------------
 // TILE - TUNISIA
