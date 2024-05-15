@@ -132,6 +132,9 @@ Lo script Python `unet_v2_1.py` utilizza TensorFlow per addestrare una rete neur
 
 
 ### 2.1.3 Preparazione del Dataset
+
+In primis tutte le coppie i/o di subtiles prodotte nei passi precedenti vanno spostate in cartelle uniche per gli input e per gli outpu(labels), nella sezione input del codice UNet vengono infatti specificati due path.
+
 Il dataset deve essere composto da immagini  a 3 canali e le corrispondenti maschere di segmentazione. Le immagini vengono caricate e pre-elaborate come segue:
 
 - **Caricamento**: Le immagini e le maschere vengono caricate utilizzando `tifffile` per supportare formati TIFF a canali plurimi.
