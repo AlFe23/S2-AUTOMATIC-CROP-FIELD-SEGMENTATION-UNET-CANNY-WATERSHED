@@ -35,8 +35,22 @@ var start = ee.Date('2020-04-01');
 var end = ee.Date ('2020-11-30');
 
 -------------------------------------------------------------------------
+
 // TILE - ARGENTINA
 
+var TILE = '20JML'
+var EPSG = '32720' //per l'output
+var ORBIT = 110
+var FOLDER = 'UNET_DATASET_IOWA'
+var CANNY_NAME = 'Cordoba_20JML_canny_verano1920_NDVIth025_sigma1dot5_NDWIth025_sigmaNDWI1dot5_optimized'
+var NDVI_th = 0.25
+var NDVI_sigma = 1.5
+var NDWI_th = 0.25
+var NDWI_sigma = 1.5
+
+// Define dates of interest
+var start = ee.Date('2019-10-01');
+var end = ee.Date ('2020-04-30');
 
 
 -------------------------------------------------------------------------
@@ -52,7 +66,18 @@ var end = ee.Date ('2020-11-30');
 -------------------------------------------------------------------------
 // TILE - USA - IOWA
 
+var TILE = '15TWG'
+var EPSG = '32615' //per l'output
+var ORBIT = 69
+var FOLDER = 'UNET_DATASET_IOWA'
+var CANNY_NAME = 'IOWA_15TWG_canny_2020_NDVIth025_sigma1dot5_NDWIth025_sigmaNDWI1dot5_optimized'
+var NDVI_th = 0.25
+var NDVI_sigma = 1.5
+var NDWI_th = 0.25
+var NDWI_sigma = 1.5
 
+// Define dates of interest
+var start = ee.Date('2020-04-01');
+var end = ee.Date ('2020-11-30');
 
 -------------------------------------------------------------------------
-
