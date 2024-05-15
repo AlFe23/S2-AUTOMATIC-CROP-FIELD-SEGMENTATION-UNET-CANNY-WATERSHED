@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Created on Wed May 15 15:33:32 2024
 
@@ -54,7 +55,7 @@ def extract_subtiles_with_overlap(input_file, tile_size, overlap_size, prefix):
     num_rows_tiles = (num_rows - overlap_size) // (tile_size - overlap_size)
     num_cols_tiles = (num_cols - overlap_size) // (tile_size - overlap_size)
     
-    output_folder = os.path.splitext(input_file)[0] + "_tiles_woverlap"
+    output_folder = os.path.splitext(input_file)[0] + f"_{prefix}_tiles_woverlap"
     create_folder(output_folder)
     
     for i in range(num_rows_tiles):
@@ -71,7 +72,7 @@ def extract_subtiles_with_overlap(input_file, tile_size, overlap_size, prefix):
                 band_data = np.nan_to_num(band_data, nan=0.0)
                 subtile_data.append(band_data)
             
-            output_file = os.path.join(output_folder, f"{prefix}subtile_{i}_{j}.tif")
+            output_file = os.path.join(output_folder, f"{prefix}_subtile_{i}_{j}.tif")
             
             driver = gdal.GetDriverByName("GTiff")
             subtile_dataset = driver.Create(output_file, tile_size, tile_size, num_channels, gdal.GDT_Float32)
@@ -104,7 +105,7 @@ input_files = [
     r"D:\Lavoro_e_Studio\Assegno_Ricerca_Sapienza\UNET_fields_segentation\Nuovo_addestramento_igarss2024\Iowa_15TWG\2021\IOWA_15TWG_canny_2021_NDVIth025_NDWIth025_sigma1dot5_optimized_thresh.tif",
 ]
 
-prefix_name_list = ['20200710_', '20200519_', '20201008_', '20200710_', '20200519_', '20201008_', '20210526_', '20210615_', '20210814_', '20210918_', '20211018_', '20210526_', '20210615_', '20210814_', '20210918_', '20211018_' ]
+prefix_name_list = ['20200710', '20200519', '20201008', '20200710', '20200519', '20201008', '20210526', '20210615', '20210814', '20210918', '20211018', '20210526', '20210615', '20210814', '20210918', '20211018' ]
 
 # Process each file with corresponding prefix
 for file, prefix in zip(input_files, prefix_name_list):
