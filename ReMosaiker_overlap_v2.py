@@ -55,7 +55,7 @@ def reconstruct_image(subtiles_folder, tile_size, overlap_size, output_file, ori
         return
 
     # Get the indices of subtiles
-    subtiles_indices = [os.path.splitext(os.path.basename(file))[0].split("_")[3:] for file in subtiles_files]
+    subtiles_indices = [os.path.splitext(os.path.basename(file))[0].split("_")[4:] for file in subtiles_files]  #Supponendo che le subtile da rimosaicare sono chiamate come: 'predicted_tilename_data_subtile_xx_yy'
     subtiles_indices = np.array(subtiles_indices, dtype=int)
 
     # Calculate the number of rows and columns in the final image
@@ -73,7 +73,7 @@ def reconstruct_image(subtiles_folder, tile_size, overlap_size, output_file, ori
     # Reconstruct the image from subtiles
     for subtiles_file in subtiles_files:
         filename = os.path.splitext(os.path.basename(subtiles_file))[0]
-        indices = filename.split("_")[3:]
+        indices = filename.split("_")[4:] #Supponendo che le subtile da rimosaicare sono chiamate come: 'predicted_tilename_data_subtile_xx_yy'
         i, j = map(int, indices)
 
         start_row = i * (tile_size - overlap_size)
