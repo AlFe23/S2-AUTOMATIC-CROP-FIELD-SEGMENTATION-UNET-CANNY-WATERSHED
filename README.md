@@ -106,6 +106,8 @@ prefix_name_list = ['prefix1_', 'prefix2_', 'prefix3_', 'prefix4_', ...]
 
 This Markdown text should now be clearer and more systematically organized.
 
+nota: la data del prefisso è aggiunta anche all'interno del nome della cartella contenente le subtile di ogni immagine, questo per far si che venga prodotta una cartella diversa per ogni input canny, che è ripetuto in numero di volte pari al numero di immagini input a 3ch.
+
 ## 2. **Segmentazione con UNet**
  
 ## 2.1 U-Net Training 
