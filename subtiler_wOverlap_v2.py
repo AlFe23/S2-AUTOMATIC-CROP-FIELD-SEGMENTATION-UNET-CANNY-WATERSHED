@@ -1,38 +1,5 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Wed May 15 15:33:32 2024
-
-@author: Alvise Ferrari
-
-Rispetto alla v1, questa versione aggiunge automaticamente al nome delle tile in prefisso fornito in una lista di prefissi corrispettivi alla lista delle immagini di input.
-e.g:
-    input_files = [
-        input_img_path_1,
-        input_img_path_2, 
-        input_img_path_3, 
-        input_img_path_4,
-    ]
-
-    prefix_name_list = ['prefix1_', 'prefix2_', 'prefix3_', 'prefix4_']
-    
-Una volta ottenuta la maschera binarizzata con il codice 'canny_binarizer.py', sia le immagini di input (3ch) che la maschera di output(1ch) possono essere preparate in forma di tile 256x256, 
-così da diventare input idonei al training U-Net.
-
-Questo script (new_subtiler_wOverlap.py) può ricevere in input sia le immagini a 3 canali, che quelle a 1 canale, e generare le subtile all'interno di una nuova cartella automaticamente generata
-nella stessa directory dell'immagine/i di input; all'interno di questa nuova cartella le subtile verranno nominate come:
-    -subtile_0_0
-    -...
-    -subtile_0_N
-    -...
-    - subtile_M_0
-    -...
-    - subtile_M_N
-dove N è pari al numero di colonne dell'immagine diviso per 256, mentre M è pari al numero di righe dell'immagine di input diviso per 256.
-
-Al fine di accelerare il processo di generazione di un dataset composto da diverse immagini di input, questo script accetta come input una lista di immagini, sia a 1ch che a 3ch.
-"""
-
 import os
+import glob
 from osgeo import gdal
 import numpy as np
 
@@ -40,74 +7,88 @@ def create_folder(folder_path):
     if not os.path.exists(folder_path):
         os.makedirs(folder_path)
 
-def extract_subtiles_with_overlap(input_file, tile_size, overlap_size, prefix):
-    # Open the input geotiff file
-    dataset = gdal.Open(input_file)
-    if dataset is None:
-        print("Error: Could not open input file")
+def reconstruct_image(subtiles_folder, tile_size, overlap_size, output_file):
+    # Find all subtiles in the specified folder
+    subtiles_files = glob.glob(os.path.join(subtiles_folder, "*.tif"))
+    
+    if not subtiles_files:
+        print("Error: No subtiles found in the specified folder")
         return
     
-    num_channels = dataset.RasterCount
-    num_rows = dataset.RasterYSize
-    num_cols = dataset.RasterXSize
+    # Get the indices of subtiles
+    subtiles_indices = [os.path.splitext(os.path.basename(file))[0].split("_")[4:] for file in subtiles_files] #sostituire con [1:]se le immagini sono chiamate come: 'predicted_tilename_data_subtile_xx_yy'
+    subtiles_indices = np.array(subtiles_indices, dtype=int)
     
-    # Calculate the number of tiles in rows and columns considering overlap
-    num_rows_tiles = (num_rows - overlap_size) // (tile_size - overlap_size)
-    num_cols_tiles = (num_cols - overlap_size) // (tile_size - overlap_size)
+    # Calculate the number of rows and columns in the final image
+    num_rows_tiles = subtiles_indices[:, 0].max() + 1
+    num_cols_tiles = subtiles_indices[:, 1].max() + 1
     
-    output_folder = os.path.splitext(input_file)[0] + f"_{prefix}_tiles_woverlap"
-    create_folder(output_folder)
+    # Calculate the number of rows and columns in the final image considering overlaps
+    num_rows = num_rows_tiles * (tile_size - overlap_size) + overlap_size
+    num_cols = num_cols_tiles * (tile_size - overlap_size) + overlap_size
     
-    for i in range(num_rows_tiles):
-        for j in range(num_cols_tiles):
-            start_row = i * (tile_size - overlap_size)
-            start_col = j * (tile_size - overlap_size)
-            end_row = start_row + tile_size
-            end_col = start_col + tile_size
+    # Create an empty array to store the reconstructed image
+    num_channels = gdal.Open(subtiles_files[0]).RasterCount
+    reconstructed_image = np.zeros((num_rows, num_cols, num_channels), dtype=np.float32)
+    
+    # Reconstruct the image from subtiles
+    for subtiles_file in subtiles_files:
+        # Extract row and column indices from the subtiles filename
+        filename = os.path.splitext(os.path.basename(subtiles_file))[0]
+        indices = filename.split("_")[4:] #sostituire con [1:]se le immagini sono chiamate come: 'predicted_tilename_data_subtile_xx_yy'
+        i, j = map(int, indices)
+        
+        # Calculate the start and end indices for this subtiles
+        start_row = i * (tile_size - overlap_size)
+        start_col = j * (tile_size - overlap_size)
+        end_row = start_row + tile_size
+        end_col = start_col + tile_size
+        
+        # Adjust end indices for subtiles on the border
+        if i == num_rows_tiles - 1:
+            end_row = num_rows
+        if j == num_cols_tiles - 1:
+            end_col = num_cols
+        
+        # Read subtiles data
+        subtiles_dataset = gdal.Open(subtiles_file)
+        for channel in range(num_channels):
+            band_data = subtiles_dataset.GetRasterBand(channel + 1).ReadAsArray()
             
-            subtile_data = []
-            for channel in range(num_channels):
-                band = dataset.GetRasterBand(channel + 1)
-                band_data = band.ReadAsArray(start_col, start_row, tile_size, tile_size)
-                band_data = np.nan_to_num(band_data, nan=0.0)
-                subtile_data.append(band_data)
-            
-            output_file = os.path.join(output_folder, f"{prefix}_subtile_{i}_{j}.tif")
-            
-            driver = gdal.GetDriverByName("GTiff")
-            subtile_dataset = driver.Create(output_file, tile_size, tile_size, num_channels, gdal.GDT_Float32)
-            for channel, channel_data in enumerate(subtile_data):
-                subtile_dataset.GetRasterBand(channel + 1).WriteArray(channel_data)
-            
-            subtile_dataset = None
+            # Copy band_data into the reconstructed image
+            reconstructed_image[start_row:end_row, start_col:end_col, channel] = band_data
+        
+        subtiles_dataset = None
+    
+    # Write reconstructed image to output file
+    driver = gdal.GetDriverByName("GTiff")
+    #output_dataset = driver.Create(output_file, num_cols, num_rows, num_channels, gdal.GDT_Float32)
+    output_dataset = driver.Create(output_file, int(num_cols), int(num_rows), int(num_channels), gdal.GDT_Float32)
 
-    print(f"Subtiles extraction with overlap completed for {prefix.strip('_')}!")
+    for channel in range(num_channels):
+        output_dataset.GetRasterBand(channel + 1).WriteArray(reconstructed_image[:,:,channel])
+    
+    output_dataset = None
+    print("Image reconstruction completed!")
 
+# # Example usage
+# subtiles_folder = r"D:\Lavoro_e_Studio\Assegno_Ricerca_Sapienza\UNET_fields_segentation\dataset_unet\Cordoba_east_20JML\verano_2019_2020\canny_masks\20JML_canny_tiles_woverlap"
+# output_file = r"D:\Lavoro_e_Studio\Assegno_Ricerca_Sapienza\UNET_fields_segentation\dataset_unet\Cordoba_east_20JML\verano_2019_2020\canny_masks\reconstructed_image.tif"
+# tile_size = 256
+# overlap_size = 64
+# reconstruct_image(subtiles_folder, tile_size, overlap_size, output_file)
+
+
+# # Example usage
+# subtiles_folder = r"D:\Lavoro_e_Studio\Assegno_Ricerca_Sapienza\UNET_fields_segentation\dataset_unet\Cordoba_east_20JML\verano_2019_2020\20JML_19feb2020_tiles_woverlap"
+# output_file = r"D:\Lavoro_e_Studio\Assegno_Ricerca_Sapienza\UNET_fields_segentation\dataset_unet\Cordoba_east_20JML\verano_2019_2020\reconstructed_image.tif"
+# tile_size = 256
+# overlap_size = 64
+# reconstruct_image(subtiles_folder, tile_size, overlap_size, output_file)
+
+
+subtiles_folder = r"D:\Lavoro_e_Studio\Assegno_Ricerca_Sapienza\UNET_fields_segentation\Nuovo_addestramento_igarss2024\Iowa_15TWG\2021\IMG_IOWA_15TWG_20211018_tiles_woverlap\predicted_masks"
+output_file = r"D:\Lavoro_e_Studio\Assegno_Ricerca_Sapienza\UNET_fields_segentation\Nuovo_addestramento_igarss2024\Iowa_15TWG\2021\IMG_IOWA_15TWG_20211018_tiles_woverlap\predicted_masks\reconstructed_image.tif"
 tile_size = 256
 overlap_size = 32
-
-input_files = [
-    r"D:\Lavoro_e_Studio\Assegno_Ricerca_Sapienza\UNET_fields_segentation\Nuovo_addestramento_igarss2024\Iowa_15TWG\2020\IMG_IOWA_15TWG_20200710.tif",
-    r"D:\Lavoro_e_Studio\Assegno_Ricerca_Sapienza\UNET_fields_segentation\Nuovo_addestramento_igarss2024\Iowa_15TWG\2020\IMG_IOWA_15TWG_20200519.tif",
-    r"D:\Lavoro_e_Studio\Assegno_Ricerca_Sapienza\UNET_fields_segentation\Nuovo_addestramento_igarss2024\Iowa_15TWG\2020\IMG_IOWA_15TWG_20201008.tif",
-    r"D:\Lavoro_e_Studio\Assegno_Ricerca_Sapienza\UNET_fields_segentation\Nuovo_addestramento_igarss2024\Iowa_15TWG\2020\IOWA_15TWG_canny_2020_NDVIth025_NDWIth025_sigma1dot5_optimized_thresh.tif",
-    r"D:\Lavoro_e_Studio\Assegno_Ricerca_Sapienza\UNET_fields_segentation\Nuovo_addestramento_igarss2024\Iowa_15TWG\2020\IOWA_15TWG_canny_2020_NDVIth025_NDWIth025_sigma1dot5_optimized_thresh.tif",
-    r"D:\Lavoro_e_Studio\Assegno_Ricerca_Sapienza\UNET_fields_segentation\Nuovo_addestramento_igarss2024\Iowa_15TWG\2020\IOWA_15TWG_canny_2020_NDVIth025_NDWIth025_sigma1dot5_optimized_thresh.tif",
-    r"D:\Lavoro_e_Studio\Assegno_Ricerca_Sapienza\UNET_fields_segentation\Nuovo_addestramento_igarss2024\Iowa_15TWG\2021\IMG_IOWA_15TWG_20210526.tif",
-    r"D:\Lavoro_e_Studio\Assegno_Ricerca_Sapienza\UNET_fields_segentation\Nuovo_addestramento_igarss2024\Iowa_15TWG\2021\IMG_IOWA_15TWG_20210615.tif",
-    r"D:\Lavoro_e_Studio\Assegno_Ricerca_Sapienza\UNET_fields_segentation\Nuovo_addestramento_igarss2024\Iowa_15TWG\2021\IMG_IOWA_15TWG_20210814.tif",
-    r"D:\Lavoro_e_Studio\Assegno_Ricerca_Sapienza\UNET_fields_segentation\Nuovo_addestramento_igarss2024\Iowa_15TWG\2021\IMG_IOWA_15TWG_20210918.tif",
-    r"D:\Lavoro_e_Studio\Assegno_Ricerca_Sapienza\UNET_fields_segentation\Nuovo_addestramento_igarss2024\Iowa_15TWG\2021\IMG_IOWA_15TWG_20211018.tif",
-    r"D:\Lavoro_e_Studio\Assegno_Ricerca_Sapienza\UNET_fields_segentation\Nuovo_addestramento_igarss2024\Iowa_15TWG\2021\IOWA_15TWG_canny_2021_NDVIth025_NDWIth025_sigma1dot5_optimized_thresh.tif",
-    r"D:\Lavoro_e_Studio\Assegno_Ricerca_Sapienza\UNET_fields_segentation\Nuovo_addestramento_igarss2024\Iowa_15TWG\2021\IOWA_15TWG_canny_2021_NDVIth025_NDWIth025_sigma1dot5_optimized_thresh.tif",
-    r"D:\Lavoro_e_Studio\Assegno_Ricerca_Sapienza\UNET_fields_segentation\Nuovo_addestramento_igarss2024\Iowa_15TWG\2021\IOWA_15TWG_canny_2021_NDVIth025_NDWIth025_sigma1dot5_optimized_thresh.tif",
-    r"D:\Lavoro_e_Studio\Assegno_Ricerca_Sapienza\UNET_fields_segentation\Nuovo_addestramento_igarss2024\Iowa_15TWG\2021\IOWA_15TWG_canny_2021_NDVIth025_NDWIth025_sigma1dot5_optimized_thresh.tif",
-    r"D:\Lavoro_e_Studio\Assegno_Ricerca_Sapienza\UNET_fields_segentation\Nuovo_addestramento_igarss2024\Iowa_15TWG\2021\IOWA_15TWG_canny_2021_NDVIth025_NDWIth025_sigma1dot5_optimized_thresh.tif",
-]
-
-prefix_name_list = ['20200710', '20200519', '20201008', '20200710', '20200519', '20201008', '20210526', '20210615', '20210814', '20210918', '20211018', '20210526', '20210615', '20210814', '20210918', '20211018' ]
-
-# Process each file with corresponding prefix
-for file, prefix in zip(input_files, prefix_name_list):
-    extract_subtiles_with_overlap(file, tile_size, overlap_size, prefix)
-    print(f"Processed {file} with prefix {prefix}")
+reconstruct_image(subtiles_folder, tile_size, overlap_size, output_file)
