@@ -334,7 +334,7 @@ reconstruct_image(subtiles_folder, tile_size, overlap_size, output_file, origina
 
 Tramite lo script `AND_combiner.py` è possibile sovrappore maschere predette da multiple immagini di input. questo può essere utile a cogliere confini che non sono presenti in una o l'altra immagine successiva, o viceversa. 
 
-Lo script applica un'operazione AND tra tutte le immagini disponibili, che corrisponde all'inverso dell'OR, assumendo che l'informazione da ritenere e sovrapporre sono i bordi, con valore del pixel 0.
+Assumendo che l'informazione da ritenere e sovrapporre siano i bordi, con valore del pixel 0, lo script applica un'operazione AND tra tutte le maschere predette, dato che il bordo equivale a False e il campo a True.
 
 ## 2.6 Pulizia della maschera predetta con trasformazioni morfologiche
 
