@@ -1,5 +1,5 @@
 # AUTOMATIC-CROP-FIELD-SEGMENTATION-USING-UNET-CANNY-WATERSHED
-Automatic software for crop field segmentation using Sentinel-2 satellite images. This tool leverages a UNet architecture, trained on  multitemporal Canny filter images, and watershed algorithm, to deliver high-precision segmentation. Ideal for agricultural researchers and GIS specialists seeking efficient and scalable solutions.
+Automatic software for crop field segmentation using Sentinel-2 L2A images. This tool leverages a UNet architecture, trained on  multitemporal canny edges masks, and watershed algorithm, to deliver high-precision crop field segmentation. Ideal for agricultural researchers and GIS specialists seeking efficient and scalable solutions.
 
 
 ### Indice
@@ -63,14 +63,14 @@ I tre canali sono scalati come segue:
 - **NDVI** con dinamica -1,1 scalata linearmente nell’intervallo 0,65535 con la formula: ndvi_uint16 = (ndvi * 32767.5) + 32767.5
 - **NDWI** con dinamica -1,1 scalata linearmente nell’intervallo 0,65535 con la formula: ndwi_uint16 = (ndwi * 32767.5) + 32767.5
 
-Nella preparazione del dataset per il training UNet è importante riscalare i valori del dataset nell’intervallo 0,1; quindi si dividerà per 10000 il primo canale e per 65535 il secondo e terzo canale.
+Nella preparazione del dataset per il training UNet è importante riscalare i valori del dataset nell’intervallo [0-1]; quindi si dividerà per 10000 il primo canale e per 65535 il secondo e terzo canale.
 
 **Geotiff uint8 composto da 1 canale** che contiene la maschera generata sovrapponendo output di filtro Canny applicato a sequenza multitemporale di immagine Sentinel-2 L2A. Compresso LZW, proiettato in EPSG:4326 - WGS 84.
-- Questa maschera è generata sommando tutti gli output di Canny ed i pixel hanno valori discreti compresi tra 0 e 255. Dovrà essere binarizzata applicando una threshold prima di proseguire con l’operazione di sub-tiling.
+- Questa maschera è generata sommando tutti gli output di Canny ed i pixel hanno valori discreti compresi tra 0 e 255. Dovrà essere binarizzata applicando un threshold prima di proseguire con l’operazione di sub-tiling.
 
 ## 1.2 Binarizzazione Maschera di Canny Multitemporale
 Una volta ottenute le Maschere multitemporali di Canny, è necessario binarizzarle tramite lo script 'canny_binarizer.py' prima di poterle utilizzare per l'addestramento della U-Net'
-Questo script è un estratto dello script `canny_cleaner_v3.py`, solo la prima parter dove viene effettuato il thresholding è mantenuta in questa parte.
+Questo script è un estratto dello script `canny_cleaner_v3.py`, solo la prima parte dove viene effettuato il thresholding è mantenuta in questa parte.
 
 **Input:**
    - Maschera Canny Multitemporale uint8 in scala di grigi (ottenuta da GEE)
@@ -159,7 +159,7 @@ Il modello utilizza l'ottimizzatore Adam con i seguenti parametri:
 Il modello viene addestrato con le seguenti specifiche:
 
 - **Batch Size**: 4 (variabile sulla base dell'hardware a disposizione)
-- **Epochs**: 100 (70 sono più che sufficienti
+- **Epochs**: 100 (70 sono più che sufficienti)
 - **Callbacks**: EarlyStopping, ReduceLROnPlateau, ModelCheckpoint per salvare i migliori pesi, e TensorBoard per il monitoring.
 
 
@@ -297,7 +297,7 @@ Al termine dell'inferenza, le maschere predette saranno salvate nella directory 
 ## 2.4 Ricostruzione di Immagini integrali da Subtiles Predette con U-Net
 
 ### Descrizione
-Lo script `ReMosaiker_overlap_v2.py` Python è progettato per ricomporre un'immagine completa a partire da subtiles generate dalprocesso di inferenza utilizzando la rete U-Net. `ReMosaiker_overlap_v2.py` gestisce la ricomposizione considerando gli overlap tra le subtiles basandosi sulla denominazione delle subtiles. In particolare la denominazione delle subtile contenute nella cartella di input deve essere del seguente tipo:
+Lo script `ReMosaiker_overlap_v2.py` Python è progettato per ricomporre un'immagine completa a partire da subtiles generate dal processo di inferenza utilizzando la rete U-Net. `ReMosaiker_overlap_v2.py` gestisce la ricomposizione considerando gli overlap tra le subtiles basandosi sulla denominazione delle subtiles. In particolare la denominazione delle subtile contenute nella cartella di input deve essere del seguente tipo:
 
 - predicted_20211018_subtile_m_n.tif
 
@@ -313,10 +313,10 @@ Nota: lo script legge le posizione a partire dalla terza posizione, dove le posi
 
 ### Configurazione
 Per utilizzare questo script, è necessario specificare:
-- **Cartella delle Subtiles**: Il percorso della directory contenente le subtiles.
-- **Dimensione delle Tiles**: La dimensione delle subtiles (ad esempio, 256x256 pixels).
-- **Dimensione dell'Overlap**: La dimensione dell'overlap tra le subtiles (ad esempio, 32 pixels).
-- **File di Output**: Il percorso e il nome del file TIFF di output.
+- **cartella delle Subtiles**: Il percorso della directory contenente le subtiles.
+- **dimensione delle Tiles**: La dimensione delle subtiles (ad esempio, 256x256 pixels).
+- **dimensione dell'Overlap**: La dimensione dell'overlap tra le subtiles (ad esempio, 32 pixels).
+- **file di Output**: Il percorso e il nome del file TIFF di output.
 
 ad esempio:
 
@@ -362,7 +362,7 @@ Per utilizzare questo script, specificare il percorso del file di input come arg
 
 ## 3. **Segmentazione Watershed e Poligonizzazione**
    
-## 3.1 Segmantazione Growing-Regions con Watershed iterativo
+## 3.1 Segmentazione Growing-Regions con Watershed iterativo
 
 ### 3.1.1 Descrizione
 
@@ -385,22 +385,22 @@ Dopo la generazione di una maschera di bordi binaria tramite un modello UNet e s
 3. **Analisi Componenti Connesse**: I picchi locali vengono analizzati per definire componenti connesse, che fungono da marcatori iniziali per il watershed.
 4. **Segmentazione Watershed**: Utilizzando la maschera binaria come maschera e i marcatori identificati come inizializzatori, il watershed è applicato per segmentare l'immagine.
 5. **Iterazione con Distanze Decrescenti**: Il processo viene ripetuto con distanza minima tra picchi picchi locali decrescenti per minimizzare la oversegmentazione.
-6. 
+ 
 
 ## 3.2 Poligonizzazione dei Segmenti Watershed
 
-Questo script converte i segmenti chiusi e unici, identificati attraverso l'algoritmo di segmentazione watershed, in poligoni vettoriali. L'obiettivo è facilitare analisi successive e operazioni di GIS, convertendo le maschere raster in formati vettoriali più utilizzabili per applicazioni di mappatura e monitoraggio agricolo.
+Questo script converte i segmenti chiusi e unici, identificati attraverso l'algoritmo di segmentazione watershed, in vettori poligonali. L'obiettivo è facilitare analisi successive e operazioni di GIS, convertendo le maschere raster in formati vettoriali più utilizzabili per applicazioni di mappatura e monitoraggio agricolo.
 
 ### 3.2.1 Descrizione
 
-Dopo aver completato la segmentazione watershed dei campi agricoli, il passo successivo è poligonizzare questi segmenti. Questo script poligonizza il raster dei segmenti unici, ovvero i labels unici generati dall'algoritmo watershed, in un formato vettoriale (Shapefile), che è più adatto per analisi successive
+Dopo aver completato la segmentazione watershed dei campi agricoli, il passo successivo è poligonizzare questi segmenti. Questo script poligonizza il raster dei segmenti unici, ovvero i labels unici generati dall'algoritmo watershed, in un formato vettoriale (Shapefile), che è più adatto per analisi successive.
 
 Il processo utilizza la libreria GDAL per leggere un raster di input, che rappresenta la maschera di segmentazione watershed, e produce un file Shapefile che contiene poligoni corrispondenti a ciascun segmento unico identificato.
 
 ### 3.2.2 Dettagli Tecnici
 
 - **Maschera di Input**: Un raster dove ogni valore unico rappresenta un segmento distinto.
-- **File Shapefile**: Uno Shapefile che contiene i poligoni di ciascun segmento identificato. Ogni poligono ha un attributo 'Label' che corrisponde all'label del segmento nel raster di input.
+- **File Shapefile**: Uno Shapefile che contiene i poligoni di ciascun segmento identificato. Ogni poligono ha un attributo 'Label' che corrisponde al label del segmento nel raster di input.
 
 
 
