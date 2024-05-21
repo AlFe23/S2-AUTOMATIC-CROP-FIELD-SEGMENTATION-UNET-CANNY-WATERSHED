@@ -35,7 +35,8 @@ Automatic software for crop field segmentation using Sentinel-2 L2A images. This
      - 2.3.4 Esecuzione dell'Inferenza
      - 2.3.5 Salvataggio delle Maschere Predette
    - 2.4 Ricostruzione di Immagini Integrali da Subtiles Predette con U-Net
-   - 2.5 Pulizia della Maschera Predetta con Trasformazioni Morfologiche
+   - 2.5 (Opzionale) sovrapposizione di predizioni multiple
+   - 2.6 Pulizia della Maschera Predetta con Trasformazioni Morfologiche
 
 3. **Segmentazione Watershed e Poligonizzazione**
    - 3.1 Segmentazione Growing-Regions con Watershed Iterativo
@@ -329,9 +330,13 @@ overlap_size = 32
 reconstruct_image(subtiles_folder, tile_size, overlap_size, output_file, original_geotiff)
 ```
 
+## 2.5 (Opzionale) sovrapposizione di predizioni multiple
 
+Tramite lo script `AND_combiner.py` è possibile sovrappore maschere predette da multiple immagini di input. questo può essere utile a cogliere confini che non sono presenti in una o l'altra immagine successiva, o viceversa. 
 
-## 2.5 Pulizia della maschera predetta con trasformazioni morfologiche
+Lo script applica un'operazione AND tra tutte le immagini disponibili, che corrisponde all'inverso dell'OR, assumendo che l'informazione da ritenere e sovrapporre sono i bordi, con valore del pixel 0.
+
+## 2.6 Pulizia della maschera predetta con trasformazioni morfologiche
 
 Lo script `unet_output_cleaner.py` è destinato alla pulizia della maschera binaria dei bordi ottenuta dal modello UNet, dopo aver ricostruito l'immagine integrale. Prima di applicare ulteriori algoritmi di segmentazione come il watershed, è essenziale ripulire la maschera binaria da elementi di rumore e da bordi non effettivi attraverso l'uso di trasformazioni morfologiche.
 
