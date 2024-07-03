@@ -1,6 +1,13 @@
 # AUTOMATIC-CROP-FIELD-SEGMENTATION-USING-UNET-CANNY-WATERSHED
 Automatic software for crop field segmentation using Sentinel-2 L2A images. This tool leverages a UNet architecture, trained on  multitemporal canny edges masks, and watershed algorithm, to deliver high-precision crop field segmentation. Ideal for agricultural researchers and GIS specialists seeking efficient and scalable solutions.
 
+**Citation:**
+
+- 	Ferrari, A., Saquella, S., Laneve, G., Pampanoni, V. (2024, July). Automating Crop-Field Segmentation in High-Resolution Satellite Images: A U-Net Approach With Optimized Multitemporal Canny Edge Detection.  In IGARSS 2024-2024 IEEE International Geoscience and Remote Sensing Symposium (soon to be published). IEEE.
+
+**Links:**
+
+- [pre-trained-model-v1] (https://drive.google.com/drive/folders/1yAT4z0pPhm3MQbG0jzgqqqkhjf_C_PSS)
 
 ### Indice
 1. **Preparazione del Dataset**
@@ -410,4 +417,18 @@ Il processo utilizza la libreria GDAL per leggere un raster di input, che rappre
 
 
 
+### Modello pre-addestrato su training dataset:
+
+To enhance generalizability, ResUnet is trained on a varied global dataset capturing a wide range of agricultural conditions and seasonal variations. This generalized model is tested across different regions and seasons. The training dataset is built associating the same multitemporal Canny-generated segmentation mask with multiple 3-ch input images from different times of the season (NDVI, NDWI, B2).  The training dataset consists of about 90,000 images, each 256x256 pixels, sub-mosaicked from Sentinel-2 tiles
+
+![image](https://github.com/AlFe23/S2-AUTOMATIC-CROP-FIELD-SEGMENTATION-UNET-CANNY-WATERSHED/assets/105355911/0ee9f30e-076b-4fbc-93a5-ba3f3b940a1b)
+
+![image](https://github.com/AlFe23/S2-AUTOMATIC-CROP-FIELD-SEGMENTATION-UNET-CANNY-WATERSHED/assets/105355911/e79a3d76-1604-4931-8d00-4d94c9ac1b2c)
+
+
+
+### Esempio di segmentazione ottenuta su nuova AOI, Modesto (CA), USA.
+
+
+![image](https://github.com/AlFe23/S2-AUTOMATIC-CROP-FIELD-SEGMENTATION-UNET-CANNY-WATERSHED/assets/105355911/99d5221a-88b6-4a41-ab1e-63315f118dac)
 
