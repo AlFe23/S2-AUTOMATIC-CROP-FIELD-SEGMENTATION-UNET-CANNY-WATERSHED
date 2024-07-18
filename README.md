@@ -124,7 +124,7 @@ Note: the date in the prefix is also added within the name of the folder contain
  
 ## 2.1 U-Net Training 
 
-The Python script `unet_v2_1.py` uses TensorFlow to train a U-Net neural network. The network is optimized to run on GPU hardware, utilizing mixed precision and dynamic memory management to improve efficiency and performance.
+The Python script `Resunet_v2_3.py` uses TensorFlow to train a U-Net neural network. The network is optimized to run on GPU hardware, utilizing mixed precision and dynamic memory management to improve efficiency and performance.
 
 ### 2.1.1 Features
 - **Mixed Precision Training**: Utilizes 16-bit and 32-bit data types during training, reducing memory consumption and speeding up the process.
@@ -156,14 +156,25 @@ The dataset should be composed of 3-channel images and their corresponding segme
 : The dataset is divided into training and validation sets using a predefined portion of the original dataset for validation. This split is based on a random index separating 10% of the data for validation.
 
 ### 2.1.4 Network Architecture
-The U-Net network is configured with convolutional blocks comprising:
 
-- Double 2D Convolutions with ReLU activation and normalization.
-- Max Pooling to reduce spatial dimensions.
-- Transposed Convolutions for upsampling and restoring original dimensions.
-- Concatenation with corresponding outputs from the contraction path to preserve contextual information.
+The architecture of choice, ResUnet performed slightly better with non-multitemporal inputs, showing versatility for single acquisition data. Given the practical need for models that perform well with single-date inputs, ResUnet was chosen as the optimal model.
 
-The final layer uses a 2D convolution to map features to the final segmentation image.
+
+**Detailed Architecture:**
+
+- Residual Blocks: Each block comprises two convolutional layers, equipped with Batch Normalization and ReLU activation function, integrated with a shortcut connection that feeds the input directly to the output of the block. This setup is crucial for mitigating training degradation, allowing the construction of deeper networks through effective skip connections.
+- training degradation, allowing the construction of deeper networks through effective skip connections.
+- Encoding Path: Consists of an increasing number of filters across four residual blocks (64, 128, 256, 512), each followed by MaxPooling (2x2) to reduce dimensionality progressively.
+- Bottleneck: Central to the network, this single residual block uses 1024 filters, functioning as a pivotal feature compressor and transformer within the network.
+- Decoding Path: Features four transpose convolutional layers (512, 256, 128, 64 filters) paired with residual blocks to refine features progressively as they are upsampled.
+- Output Layer: Utilizes a 1x1 Conv2D layer with Sigmoid activation to produce the final binary segmentation map.
+
+**Training Details:**
+
+- Optimizer: Adam, with a learning rate of 0.001 and epsilon set to 1e-8, for robust and adaptive parameter updates.
+- Loss Function: Binary Cross-Entropy (BFCE), chosen specifically to address class imbalance issues within the datasets.
+- Metrics: Includes Binary Intersection over Union (IoU), Binary Accuracy, Precision, Recall, and Dice Coefficient to provide a comprehensive assessment of model performance.
+- Epochs: The network is trained for a total of 100 epochs, ensuring adequate learning without overfitting.
 
 ### 2.1.5 Optimizer Configuration
 The model uses the Adam optimizer with the following parameters:
