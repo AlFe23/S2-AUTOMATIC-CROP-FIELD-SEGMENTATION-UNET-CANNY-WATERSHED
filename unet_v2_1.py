@@ -43,6 +43,10 @@ Differences between ver2.0 and ver2.1
 
 ### Conclusion:
 These changes signify a shift towards more robust, scalable, and efficient data handling practices using TensorFlow’s best practices. This shift is critical for improving model training efficiency, especially when dealing with large datasets typical in image processing tasks. This adaptation not only makes the code more maintainable but potentially enhances performance on larger datasets or more complex training scenarios.
+
+License:
+This code is released under the MIT License.
+
 """
 import datetime
 import os
@@ -110,17 +114,13 @@ print("Num GPUs Available: ", len(tf.config.list_physical_devices('GPU')))
 
 
 # # INPUT DATA
-# train_img_dir = os.path.join(r"D:\Lavoro_e_Studio\Assegno_Ricerca_Sapienza\UNET_fields_segentation\Nuovo_addestramento_igarss2024\Iowa_15TWG\2021\input_imgs\IOWA_15TWG_canny_2021_NDVIth025_NDWIth025_sigma1dot5_optimized_tiles_woverlap\*.tif")
-# train_label_dir = os.path.join(r"D:\Lavoro_e_Studio\Assegno_Ricerca_Sapienza\UNET_fields_segentation\Nuovo_addestramento_igarss2024\Iowa_15TWG\2021\canny_mask\IOWA_15TWG_canny_2021_NDVIth025_NDWIth025_sigma1dot5_optimized_tiles\*.tif")
-# X = np.array([imread(file) for file in glob.glob(train_img_dir)])
-# Y = np.array([cv2.imread(file,cv2.IMREAD_GRAYSCALE) for file in glob.glob(train_label_dir)])
 
 #######################################################
 
 
-base_directory = r"D:\Lavoro_e_Studio\Assegno_Ricerca_Sapienza\UNET_fields_segentation\Nuovo_addestramento_igarss2024\Iowa_15TWG\2020"
-input_images_directory = os.path.join(base_directory, "input_2020_simple\*.tif")
-canny_masks_directory = os.path.join(base_directory, "labels_2020_simple\*.tif")
+base_directory = '/mnt/ssd3/unet/'
+input_images_directory = os.path.join(base_directory, "DS_A_input_fraz/*.tif")
+canny_masks_directory = os.path.join(base_directory, "DS_A_label_fraz/*.tif")
 
 # Create directories for logs and weights if they don't exist
 logs_directory = os.path.join(base_directory, "logs_unet")
@@ -160,19 +160,19 @@ Y = load_tiff_directory_tifffile(canny_masks_directory)
 #INPUT SCALING between 0 and 1 (mantenere i valori nel range 0-255 porta a valori di Loss molto grandi rendendo la convergenza del modello molto più difficile)
 
 # Make a copy of X for normalization
-X_train = np.copy(X)
+#X_train = np.copy(X)
 
 # Normalize B2 channel: 0-10000 to 0-1
-X_train[:,:,:,0] = X_train[:,:,:,0] / 10000.0
+X[:,:,:,0] = X[:,:,:,0] / 10000.0
 
 # Normalize NDVI channel: 0-65535 to 0-1
-X_train[:,:,:,1] = X_train[:,:,:,1] / 65535.0
+X[:,:,:,1] = X[:,:,:,1] / 65535.0
 
 # Normalize NDWI channel: 0-65535 to 0-1
-X_train[:,:,:,2] = X_train[:,:,:,2] / 65535.0
+X[:,:,:,2] = X[:,:,:,2] / 65535.0
 
 # Normalize binary image (0,255) to (0,1)
-Y_train = Y/255
+Y = Y/255
 
 # # TRAIN-TEST SPLIT with sklearn
 # from sklearn.model_selection import train_test_split
@@ -182,10 +182,10 @@ Y_train = Y/255
 # #Tentativo di usare tf.data API per migliorare la gestione memoria:
 
 # Define the size of the validation set
-validation_size = int(len(X_train) * 0.1)  # 10% for validation
+validation_size = int(len(X) * 0.1)  # 10% for validation
 
 # Shuffle the dataset indices
-indices = np.arange(len(X_train))
+indices = np.arange(len(X))
 np.random.shuffle(indices)
 
 # Split indices for training and validation sets
@@ -193,8 +193,8 @@ train_indices = indices[validation_size:]
 val_indices = indices[:validation_size]
 
 # Create training and validation datasets
-train_dataset = tf.data.Dataset.from_tensor_slices((X_train[train_indices], Y_train[train_indices]))
-val_dataset = tf.data.Dataset.from_tensor_slices((X_train[val_indices], Y_train[val_indices]))
+train_dataset = tf.data.Dataset.from_tensor_slices((X[train_indices], Y[train_indices]))
+val_dataset = tf.data.Dataset.from_tensor_slices((X[val_indices], Y[val_indices]))
 
 # Apply the necessary transformations like caching, shuffling, batching, and prefetching
 train_dataset = train_dataset.cache().shuffle(buffer_size=len(train_indices)).batch(4).prefetch(tf.data.experimental.AUTOTUNE)
@@ -212,19 +212,19 @@ Prefetching: This is a performance optimization that allows later batches to be 
 #######################################################
 
 #shape check
-print("The shape of train set is {s1}.\nThe shape of train labels is {s2}.".format(s1=X_train.shape,s2=Y_train.shape))
+print("The shape of train set is {s1}.\nThe shape of train labels is {s2}.".format(s1=X.shape,s2=Y.shape))
 
 #random print to check correct mapping of data to labels
-rand_num = np.random.randint(0,len(X_train))
+rand_num = np.random.randint(0,len(X))
 print('At Index : {index}'.format(index = rand_num))
 
 from tensorflow.keras.utils import array_to_img
-rand_img = X_train[rand_num]
+rand_img = X[rand_num]
 fig = plt.subplots(dpi=300)
 image=array_to_img(rand_img)
 plt.subplot(121), plt.imshow(image)
 plt.title('Train image') 
-plt.subplot(122), imshow(Y_train[rand_num])
+plt.subplot(122), imshow(Y[rand_num])
 plt.title('Train label') 
 
 plt.show()
@@ -324,6 +324,8 @@ c9 = tf.keras.layers.Dropout(0.1)(c9)
 c9 = tf.keras.layers.Conv2D(64,3, activation='relu', kernel_initializer='he_normal', padding='same')(c9)
 
 outputs = tf.keras.layers.Conv2D(1, 1, activation='sigmoid')(c9)
+
+
  
 model = tf.keras.Model(inputs=[inputs], outputs=[outputs])
 

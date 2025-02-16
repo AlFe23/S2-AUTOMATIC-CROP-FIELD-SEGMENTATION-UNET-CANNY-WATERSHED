@@ -2,8 +2,37 @@
 """
 Created on Sat May 11 19:21:07 2024
 
-@author: ferra
+
+Inference Script for Sentinel-2 Crop Segmentation (Original Version)
+
+This script performs **inference using a pre-trained U-Net model** for crop field segmentation.  
+It takes **image tiles** as input, processes them through the model, and generates binary masks  
+indicating predicted crop field boundaries.
+
+Key Features:
+- Loads a **pre-trained U-Net model** for inference.
+- Processes **image tiles from Sentinel-2 L2A GeoTIFFs**.
+- Normalizes input images using predefined scaling factors.
+- Runs predictions and generates **binary masks** for segmentation.
+- Saves predicted masks in a structured output directory.
+
+Quick User Guide:
+1. Modify `input_directory` and `output_directory` in the script.
+2. Ensure the **U-Net model** is available at `model_path`.
+3. Run the script:
+       python inference.py
+4. The output masks will be saved in `<output_directory>/predicted_masks/`.
+
+Dependencies:
+Python packages: numpy, gdal (from osgeo), glob, os, tifffile, tensorflow (keras)
+
+License:
+This code is released under the MIT License.
+
+Author: Alvise Ferrari  
+
 """
+
 
 import os
 import glob
@@ -16,7 +45,7 @@ from tensorflow.keras.models import load_model
 os.environ['CUDA_VISIBLE_DEVICES'] = '-1'  # Disables GPU visibility
 
 # Path to the directory containing new dataset images
-input_directory = r"D:\Lavoro_e_Studio\Assegno_Ricerca_Sapienza\UNET_fields_segentation\Nuovo_addestramento_igarss2024\Iowa_15TWG\2021\IMG_IOWA_15TWG_20211018_tiles_woverlap"
+input_directory = r"dataset_gee/BOTHAVILLE/2020/20191201T080301_20191201T082401_T35JMK_B2_NDVI_NDWI_35JMK_20191201_tiles_woverlap"
 
 output_directory = os.path.join(input_directory, "predicted_masks")
 
@@ -26,7 +55,7 @@ if not os.path.exists(output_directory):
 
 # Load the trained model (assuming no need for the optimizer, set compile=False if not adjusting weights)
 #Load the model without expecting the optimizer state: (to avoid incompatibility with models trained on successive versions of tensorflow)
-model = load_model(r"D:\Lavoro_e_Studio\Assegno_Ricerca_Sapienza\UNET_fields_segentation\Nuovo_addestramento_igarss2024\Iowa_15TWG\2020\weights_unet\U-Net-Weights-BFCE_IOWA2020.h5", compile=False)
+model = load_model(r"DS_IOWA_2021/weights_unet/BFC-2024-05-12-235422/U-Net-Weights-BFCE.h5", compile=False)
 
 # Function to load and preprocess images
 def load_and_preprocess_images(directory):

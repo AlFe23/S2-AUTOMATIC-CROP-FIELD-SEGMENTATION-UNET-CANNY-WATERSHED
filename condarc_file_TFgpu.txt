@@ -1,0 +1,19 @@
+channels:
+  - conda-forge
+create_default_packages:
+  - python
+  - gdal
+  - geopandas
+  - ipython
+  - numpy
+  - opencv
+  - pandas
+  - seaborn
+  - scipy
+  - spyder
+  - spyder-kernels
+  - scikit-learn
+  - scikit-image
+  - tensorflow-gpu
+  - tifffile
+  - albumentations

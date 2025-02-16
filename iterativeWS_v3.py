@@ -6,7 +6,42 @@ Created on Thu Mar 28 18:41:55 2024
 
 Rispetto alla v2, questa versione risolve il problema della mancanza dell'argomento 'indeces' per la funzione 'peak_local_max' di SK-Image. 
 In questo caso la conversione dall'array di coordinate dei massimi locali alla maschera bolleana viene implemetata manualmente'
+
+
+Iterative Watershed Segmentation for Sentinel-2 Crop Masks (v3)
+
+This version improves upon **iterativeWS_v2.py** by fixing an issue  
+with **peak detection in the `peak_local_max` function**.  
+It ensures robust detection of **segmentation markers**.
+
+Key Features:
+- **Fixes `peak_local_max` argument issue**, ensuring correct marker detection.
+- **Converts peak coordinates to a boolean mask** for better watershed accuracy.
+- **Refines segmentation iteratively**, applying multiple watershed passes.
+- **Writes georeferenced segmentation results** after each iteration.
+
+Differences from the Previous Version:
+- **Bug Fix:** Corrects `peak_local_max` implementation to avoid shape mismatch errors.
+- **More Robust Marker Definition:** Converts detected peak coordinates into a boolean mask.
+- **Improved Compatibility:** Ensures consistency across different versions of `skimage`.
+
+Quick User Guide:
+1. Set `input_canny_mask_dir` to the **binary mask file** for segmentation.
+2. Adjust `min_distances` for watershed iterations (default: `[60, 30, 30, 20, 20, 15, 15, 10, 5]`).
+3. Run the script:
+       python iterativeWS_v3.py
+4. Output **GeoTIFF segmentation maps** will be saved after each iteration.
+
+Dependencies:
+Python packages: numpy, gdal (from osgeo), skimage (segmentation), scipy (ndimage), cv2, os
+
+License:
+This code is released under the MIT License.
+
+Author: Alvise Ferrari  
+
 """
+
 
 import os
 import numpy as np
@@ -48,7 +83,7 @@ def write_geotiff(output_path, array, geotransform, projection, dtype=gdal.GDT_U
     dataset.FlushCache()
     dataset = None
 
-input_canny_mask_dir = 'dataset_gee_2/LESMANS/2019_T30UYU_combined_predicted_mask_thresh_dil_closed_filledobj_objrem.tif'
+input_canny_mask_dir = '/mnt/h/Alvise/CIMA_cooperation/UNET_DATASET_CIMA/2018_33TXF/2018_T33TXF_B2_NDVI_NDWI_predicted_mask_combined_cleaned.tif'
 
 binary_mask, geotransform, projection = read_geotiff(input_canny_mask_dir)
 
@@ -56,7 +91,7 @@ ref_image_mask = np.copy(binary_mask)
 watershed_labels = np.copy(binary_mask).astype(np.uint32) * 0
 number = 0
 
-min_distances = [60, 30, 30, 20, 20, 15, 15, 10]
+min_distances = [60, 30, 30, 20, 20, 15, 15, 10, 5]
 
 for round_idx, min_distance in enumerate(min_distances, start=1):
     distance = ndimage.distance_transform_edt(ref_image_mask)

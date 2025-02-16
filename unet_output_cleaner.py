@@ -15,130 +15,132 @@ Output:
     Maschera binaria 0-255 ripulita da elementi indesiderati.
 """
 
+"""
+U-Net Output Cleaner for Sentinel-2 Crop Segmentation
+
+This script cleans the **binary segmentation masks** produced by the U-Net model,  
+removing **noise and small artifacts** before applying the **watershed algorithm**  
+for final crop field segmentation. The cleaning process includes **morphological opening,  
+small object removal, and hole filling** to enhance segmentation quality.
+
+Key Features:
+- **Removes small noise** from binary masks using morphological operations.
+- **Fills small holes** to create cleaner field boundaries.
+- **Ensures consistency** before applying watershed segmentation.
+- Supports **customizable filtering parameters**.
+
+Quick User Guide:
+1. Set `input_path` to the **binary mask** to be cleaned.
+2. Set `output_path` to save the **cleaned mask**.
+3. Adjust optional parameters:
+   - `apply_opening=True`: Enables morphological noise removal.
+   - `min_size=9`: Removes objects smaller than this value.
+   - `area_threshold=50`: Fills holes smaller than this value.
+4. Run the script:
+       python unet_output_cleaner.py
+5. The cleaned mask will be saved as a **georeferenced GeoTIFF**.
+
+Dependencies:
+Python packages: numpy, gdal (from osgeo), skimage (morphology), os
+
+License:
+This code is released under the MIT License.
+
+Author: Alvise Ferrari  
+
+"""
 
 
 
 import os
-from matplotlib import pyplot as plt
-from PIL import Image
-from skimage.feature import peak_local_max
-from skimage.segmentation import watershed
-import skimage
-from scipy import ndimage
-import matplotlib
 import numpy as np
-import argparse
-import imutils
-import cv2 as cv
 from osgeo import gdal
-from skimage.morphology import binary_dilation, disk, closing, opening, remove_small_objects, remove_small_holes, thin
-
+from skimage.morphology import disk, opening, remove_small_objects, remove_small_holes
+import matplotlib.pyplot as plt
 
 def read_geotiff(input_path):
-    dataset = gdal.Open(input_path)
-    if dataset is None:
-        raise IOError(f"Unable to open {input_path}")
-    
-    # Get raster data
-    band = dataset.GetRasterBand(1)  # assuming you need the first band
-    array = band.ReadAsArray()
-    
-    # Get geotransform and projection
-    geotransform = dataset.GetGeoTransform()
-    projection = dataset.GetProjection()
-    
-    return array, geotransform, projection
-
-
+    """Read a GeoTIFF file and return the array, geotransform, and projection."""
+    try:
+        dataset = gdal.Open(input_path)
+        if dataset is None:
+            raise IOError(f"Unable to open {input_path}")
+        band = dataset.GetRasterBand(1)
+        array = band.ReadAsArray()
+        geotransform = dataset.GetGeoTransform()
+        projection = dataset.GetProjection()
+        return array, geotransform, projection
+    except Exception as e:
+        print(f"Error reading {input_path}: {e}")
+        return None, None, None
 
 def write_geotiff(output_path, array, geotransform, projection):
-    driver = gdal.GetDriverByName('GTiff')
-    rows, cols = array.shape
-    #Define creation options for LZW compression
-    options = ['COMPRESS=LZW']
+    """Write an array to a GeoTIFF file with specified geotransform and projection."""
+    try:
+        driver = gdal.GetDriverByName('GTiff')
+        rows, cols = array.shape
+        options = ['COMPRESS=LZW']
+        dataset = driver.Create(output_path, cols, rows, 1, gdal.GDT_Byte, options=options)
+        if dataset is None:
+            raise IOError(f"Could not create {output_path}")
+        dataset.SetGeoTransform(geotransform)
+        dataset.SetProjection(projection)
+        dataset.GetRasterBand(1).WriteArray(array)
+        dataset.FlushCache()
+    except Exception as e:
+        print(f"Error writing {output_path}: {e}")
+
+def process_mask(input_path, output_path, apply_opening=False, min_size=9, area_threshold=50):
+    """
+    Process the binary mask to remove noise and fill holes, then save the result.
     
-    dataset = driver.Create(output_path, cols, rows, 1, gdal.GDT_Byte, options=options)
+    Parameters:
+    - input_path: str, path to the input GeoTIFF file.
+    - output_path: str, path to save the processed GeoTIFF file.
+    - apply_opening: bool, whether to apply the morphological opening operation.
+    - min_size: int, minimum size for objects to keep in the mask.
+    - area_threshold: int, maximum size for holes to fill in the mask.
+    """
+    # Read the GeoTIFF
+    canny, geotransform, projection = read_geotiff(input_path)
+    if canny is None:
+        return
     
-    if dataset is None:
-        raise IOError(f"Could not create {output_path}")
+    # Ensure the input is binary (0 and 1), convert if necessary
+    canny = (canny > 0).astype(np.uint8)
+
+    # Apply morphological opening to remove small noise (erosion followed by dilation), if specified
+    if apply_opening:
+        footprint = disk(1)  # Use a larger, non-zero radius for the disk
+        canny = opening(canny, footprint)
     
-    dataset.SetGeoTransform(geotransform)
-    dataset.SetProjection(projection)
-    dataset.GetRasterBand(1).WriteArray(array)
-    dataset.FlushCache()  # Write to disk.
+    # Remove small objects to clean noise
+    cleaned_mask = remove_small_objects(canny, min_size=min_size, connectivity=2).astype('uint8')
+    
+    # Fill small holes within the regions
+    filled_mask = remove_small_holes(cleaned_mask, area_threshold=area_threshold).astype('uint8')
+    
+    # Write the final processed mask to a new file
+    write_geotiff(output_path, filled_mask, geotransform, projection)
 
 
 
-
-
-# %% INPUT
-# Set the PROJ_LIB environment variable
-os.environ['PROJ_LIB'] = 'C:\\Program Files\\envs\\gisenv\\Library\\share\\proj'
-
-# Define the base directory
-base_dir = r'D:\Lavoro_e_Studio\Assegno_Ricerca_Sapienza\UNET_fields_segentation\Nuovo_addestramento_igarss2024\Iowa_15TWG\2021'
-os.chdir(base_dir)
-# Define the filename
-name = "IMG_IOWA_15TWG_20211018_predicted_mask.tif"
-
-
-# Generate the full path
-ee_canny_edge_detection_path = os.path.join(base_dir, name)
-
-
-# Reading the GeoTIFF
-canny, geotransform, projection = read_geotiff(ee_canny_edge_detection_path)
+#######################################################################################
 
 
 
+# Example usage with new parameters
+# input_path = '/mnt/h/Alvise/CIMA_cooperation/UNET_DATASET_CIMA/2018_33TXF/2018_T33TXF_B2_NDVI_NDWI_predicted_mask_combined.tif'
+# output_path = input_path.replace('.tif', '_cleaned.tif')
 
-# %% TRASFORMAZIONI MORFOLOGICHE
+# Set optional parameters
+# apply_opening = True  # Set to False if you don't want to apply opening
+# min_size = 9  # Adjust minimum object size to remove (actually the maximum size of white holes to be filled)
+# area_threshold = 60  # Adjust maximum hole size to fill (actually the maximum size of isolated black objects to be removed  from white backgrounds!)
 
-
-################################################################################################################################################
-
-
-#Opening
-#The morphological opening of an image is defined as an erosion followed by a dilation. Opening can remove small bright spots (i.e. “salt”) and connect small dark cracks. This tends to “open” up (dark) gaps between (bright) features.
-
-footprint_opening  = disk(2.5)
-opened_thresh = opening(canny, footprint_opening )
-output_path_closed = name.replace('.tif', '_thresh_opened.tif')
-write_geotiff(output_path_closed, opened_thresh, geotransform, projection) 
+# Call the function with new arguments
+# process_mask(input_path, output_path, apply_opening=apply_opening, min_size=min_size, area_threshold=area_threshold)
 
 
-#REMOVE SMALL OBJECTS
-
-#riempiamo i buchi bianchi della maschera bianchi (attenzione rimuove anche contorni...da rivedere)
-# skimage.morphology.remove_small_objects(ar, min_size=64, connectivity=1, *, out=None)[source]
-# Remove objects smaller than the specified size.
-# Expects ar to be an array with labeled objects, and removes objects smaller than min_size. If ar is bool, the image is first labeled. This leads to potentially different behavior for bool and 0-and-1 arrays.
-
-thresh_filled=remove_small_objects(opened_thresh.astype(bool),min_size=200,connectivity=2).astype('uint8')
-output_path_filled = name.replace('.tif', '_thresh_opened_filledobj.tif')
-write_geotiff(output_path_filled, thresh_filled, geotransform, projection)
-
-
-
-#REMOVE SMALL OBJECTS NEGATIVE(applicato al negativo per rimuovere rumore di bordi incompleti)
-# Calculate the negative
-thresh_filled_inv = np.copy(thresh_filled)
-thresh_filled_inv[thresh_filled == 1] = 0
-thresh_filled_inv[thresh_filled == 0] = 255
-# output_path_filled_inv = name.replace('.tif', '_thresh_opened_filledobj_inv.tif')
-# write_geotiff(output_path_filled_inv, thresh_filled_inv, geotransform, projection)
-
-# Fill white holes in the negative mask of the previous one
-thresh_filled_inv_objrem = remove_small_objects(thresh_filled_inv.astype(bool), min_size=80, connectivity=2)
-thresh_filled_inv_objrem = thresh_filled_inv_objrem.astype('uint8')
-
-# Calculate the final processed mask by applying the inverse operation again if needed
-# Assuming you need to invert it again, otherwise adjust according to your needs
-thresh_filled_objrem_inv = np.copy(thresh_filled_inv_objrem)
-thresh_filled_objrem_inv[thresh_filled_inv_objrem == 1] = 0
-thresh_filled_objrem_inv[thresh_filled_inv_objrem == 0] = 255
-output_path_objrem_inv = name.replace('.tif', '_thresh_dil_closed_filledobj_objrem.tif')
-write_geotiff(output_path_objrem_inv, thresh_filled_objrem_inv, geotransform, projection)
 
 
 

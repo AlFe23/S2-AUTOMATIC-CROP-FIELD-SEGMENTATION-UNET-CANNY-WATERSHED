@@ -1,0 +1,67 @@
+Add-AppxPackage C:\Users\Alvise\Downloads\Ubuntu2204-221101.AppxBundle
+
+- quindi completare installazione Ubuntu aprendolo come app e creare account.
+- poi tornare su terminale windows e digitare:
+
+wsl --set-version Ubuntu 2
+
+(questo passaggio è fondamentale per poter configurare correttamente i driver nvidia con WSL, altrimenti nvidia-smi non funziona)
+
+
+
+These four commands quickly and quietly install the latest 64-bit version of the installer and then clean up after themselves. To install a different version or architecture of Miniconda for Linux, change the name of the .sh installer in the wget command.
+
+mkdir -p ~/miniconda3
+wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O ~/miniconda3/miniconda.sh
+bash ~/miniconda3/miniconda.sh -b -u -p ~/miniconda3
+rm -rf ~/miniconda3/miniconda.sh
+
+After installing, initialize your newly-installed Miniconda. The following commands initialize for bash and zsh shells:
+
+~/miniconda3/bin/conda init bash
+~/miniconda3/bin/conda init zsh
+
+- riavvia terminale Ubuntu
+
+
+(opzionale)  conda config --set auto_activate_base true/false
+
+
+- ora possiamo procedere a creare l'environment con l'aiuto di conda
+
+creiamo un nuovo file .condarc
+modifichiamolo :
+nano .condarc
+
+aggiungiamo quanto segue e salviamo:
+
+channels:
+  - defaults
+  - conda-forge
+create_default_packages:
+  - python
+  - geopandas
+  - gdal
+  - ipython
+  - numpy=1.23.4
+  - opencv
+  - scipy
+  - spyder
+  - spyder-kernels
+  - scikit-image
+  - scikit-learn
+  - tifffile
+  - pillow
+  - albumentations
+  - tensorflow-gpu
+  
+  
+-quindi creiamo l'environment:
+
+conda create --name tf-wsl (automaticamente verrà usato il file .condarc per la configurazione)
+
+
+
+
+Per monitorare in modo continuo (0.1s refresh) usare il comando:
+watch -n0.1 nvidia-smi

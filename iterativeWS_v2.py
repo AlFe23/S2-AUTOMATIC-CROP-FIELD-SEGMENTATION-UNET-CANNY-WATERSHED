@@ -2,8 +2,35 @@
 """
 Created on Thu Mar 28 18:41:55 2024
 
-@author: ferra
+Iterative Watershed Segmentation for Sentinel-2 Crop Masks (v2)
+
+This script applies **iterative watershed segmentation** to a **binary segmentation mask**  
+to refine crop field boundaries. The **distance transform method** is used to  
+progressively segment large regions into smaller, more precise segments.
+
+Key Features:
+- **Performs iterative watershed segmentation** on binary U-Net output masks.
+- **Uses distance transform and peak detection** to define watershed markers.
+- **Sequentially refines segmentation** over multiple iterations.
+- **Writes georeferenced segmentation results** after each iteration.
+
+Quick User Guide:
+1. Set `input_canny_mask_dir` to the **binary mask file** for segmentation.
+2. Adjust `min_distances` for watershed iterations (default: `[60, 30, 30, 20, 20, 15, 15, 10]`).
+3. Run the script:
+       python iterativeWS_v2.py
+4. Output **GeoTIFF segmentation maps** will be saved after each iteration.
+
+Dependencies:
+Python packages: numpy, gdal (from osgeo), skimage (segmentation), scipy (ndimage), cv2, os
+
+License:
+This code is released under the MIT License.
+
+Author: Alvise Ferrari  
+
 """
+
 
 import os
 import numpy as np
@@ -67,9 +94,8 @@ def write_geotiff(output_path, array, geotransform, projection, dtype=gdal.GDT_U
 
 
 # Define the base directory and input filename
-base_dir = r'D:\Lavoro_e_Studio\Assegno_Ricerca_Sapienza\UNET_fields_segentation\Nuovo_addestramento_igarss2024\Iowa_15TWG\2020'
-input_filename = "IOWA_15TWG_canny_2020_NDVIth025_NDWIth025_sigma1dot5_optimized_thresh_dil_closed_thinned_filledobj50p_objrem50p.tif"
-input_canny_mask_dir = os.path.join(base_dir, input_filename)
+
+input_canny_mask_dir ='dataset_gee_2/MODESTO/2020_T10SFG_combined_predicted_mask_thresh_dil_closed_filledobj_objrem.tif'
 
 # Reading the GeoTIFF binary mask
 binary_mask, geotransform, projection = read_geotiff(input_canny_mask_dir)
@@ -87,10 +113,11 @@ for round_idx, min_distance in enumerate(min_distances, start=1):
     distance = ndimage.distance_transform_edt(ref_image_mask)
 
     # Find local maxima
-    localMax = peak_local_max(distance, indices=False, min_distance=min_distance, labels=ref_image_mask)
+    #localMax = peak_local_max(distance, indices=False, min_distance=min_distance, labels=ref_image_mask)
+    localMax = peak_local_max(distance, min_distance=min_distance, labels=ref_image_mask)
 
     # Connected component analysis on the local peaks
-    markers = ndimage.label(localMax, structure=np.ones((3, 3)))[0]
+    markers = ndimage.label(localMax, structure=np.ones((3, 3)))#[0]
 
     # Watershed algorithm
     labels = watershed(-distance, markers, mask=ref_image_mask)

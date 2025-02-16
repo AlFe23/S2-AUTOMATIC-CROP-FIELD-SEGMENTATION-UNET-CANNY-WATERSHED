@@ -5,30 +5,39 @@ Created on Thu May 16 18:30:30 2024
 
 @author: tesla
 
-ResUNet al posto della UNet
+
+Versione v3:
+- Importazioni di Keras aggiornate per utilizzare direttamente il pacchetto `keras` separato da TensorFlow.
+- Precisione mista disabilitata per evitare instabilità numerica, con politica impostata a `float32`.
+- Modifiche nelle funzioni di perdita e metriche per utilizzare `tf.keras.backend.flatten` anziché `tf.keras.layers.Flatten`.
+- Ottimizzatore Adam aggiornato con il parametro `epsilon=1e-8` per prevenire divisioni per zero e stabilizzare il training.
+- Callback per l'addestramento aggiornate per migliorare la stabilità e la gestione dell'apprendimento.
+- Mantiene la gestione della memoria GPU avanzata con `TF_GPU_ALLOCATOR=cuda_malloc_async` e abilitazione della crescita della memoria per i dispositivi GPU.
+
+- nota che i pesi vengono ora salvati nell'estensione specifica *.keras, e non più in formato *.h5 come nella versione precedente dello script.
 
 
-ResUNet Training Script for Crop Field Segmentation (v2.3)
+ResUNet Training Script for Crop Field Segmentation (v3)
 
-This version replaces **U-Net with ResUNet**, introducing **residual connections**  
-for improved segmentation performance and better gradient flow.
+This version further **refines ResUNet training**, improving numerical stability,  
+optimizing GPU memory allocation, and making TensorFlow/Keras integration smoother.
 
 Key Features:
-- **Implements a ResUNet architecture** instead of standard U-Net.
-- **Uses residual connections for better feature propagation**.
-- **Maintains dataset optimizations from previous versions**.
-- **Uses Adam optimizer with `epsilon=1e-8` for numerical stability**.
-- **Enables GPU memory optimizations for stable training**.
+- **Updated Keras import structure**, separating from TensorFlow’s core.
+- **Disables mixed precision (`float32`) to avoid numerical instability**.
+- **Refines loss functions and metrics for more stable training**.
+- **Ensures better GPU memory growth handling with `cuda_malloc_async`**.
 
 Differences from the Previous Version:
-- **Switches from U-Net to ResUNet** for more stable deep feature learning.
-- **Uses `Conv2D + BatchNormalization + Add` residual blocks** instead of basic convolutions.
-- **Introduces improved weight saving format (`.keras` instead of `.h5`).**
+- **Better numerical stability** by refining loss functions.
+- **Uses explicit Keras package imports instead of TensorFlow-Keras hybrid**.
+- **Improved optimizer settings to avoid gradient explosions**.
+- **Keeps weight saving format `.keras` instead of `.h5` for future compatibility**.
 
 Quick User Guide:
 1. Set `input_images_directory` and `canny_masks_directory` paths.
 2. Run the script:
-       python Resunet_v2_3.py
+       python Resunet_v3.py
 3. The trained model weights will be saved in the `weights_unet` folder.
 
 Dependencies:
@@ -38,7 +47,8 @@ License:
 This code is released under the MIT License.
 
 Author: Alvise Ferrari  
-Code Generation Year: 2025  
+
+
 
 """
 
@@ -98,10 +108,11 @@ print("Num GPUs Available: ", len(tf.config.list_physical_devices('GPU')))
 
 ###################################################################
 
-base_directory = '/mnt/h/Alvise/training_DS_A'
+base_directory = '/mnt/h/CFS_superesolved_temp/DS_prelim_test'
 #base_directory = r'H:\Alvise\training_DS_A'
-input_images_directory = os.path.join(base_directory, "DS_A_input/*.tif")
-canny_masks_directory = os.path.join(base_directory, "DS_A_label/*.tif")
+input_images_directory = os.path.join(base_directory, "input/*.tif")
+canny_masks_directory = os.path.join(base_directory, "labels/*.tif")
+
 
 # Create directories for logs and weights if they don't exist
 logs_directory = os.path.join(base_directory, "logs_unet")
@@ -175,22 +186,22 @@ val_dataset = val_dataset.batch(batch_size).prefetch(tf.data.experimental.AUTOTU
 ###########################################################################
 
 # Dice Loss function definition
-
+from keras import backend as K
 K.set_image_data_format('channels_last')
 
 # Function for Dice Coefficient
 smooth = 1
 def dice_coef(y_true, y_pred):
-    y_true_f = tf.keras.layers.Flatten(y_true)
-    y_pred_f = tf.keras.layers.Flatten(y_pred)
-    intersection = K.sum(y_true_f * y_pred_f)
-    return (2. * intersection + smooth) / (K.sum(y_true_f) + K.sum(y_pred_f) + smooth)
+    y_true_f = tf.keras.backend.flatten(y_true)
+    y_pred_f = tf.keras.backend.flatten(y_pred)
+    intersection = tf.reduce_sum(y_true_f * y_pred_f)
+    return (2. * intersection + smooth) / (tf.reduce_sum(y_true_f) + tf.reduce_sum(y_pred_f) + smooth)
 
 def dice_loss(y_true, y_pred):
-    y_true_f = tf.keras.layers.Flatten(y_true)
-    y_pred_f = tf.keras.layers.Flatten(y_pred)
-    intersection = K.sum(y_true_f * y_pred_f)
-    return 1 - (2. * intersection + smooth) / (K.sum(y_true_f) + K.sum(y_pred_f) + smooth)
+    y_true_f = tf.keras.backend.flatten(y_true)
+    y_pred_f = tf.keras.backend.flatten(y_pred)
+    intersection = tf.reduce_sum(y_true_f * y_pred_f)
+    return 1 - (2. * intersection + smooth) / (tf.reduce_sum(y_true_f) + tf.reduce_sum(y_pred_f) + smooth)
 
 ###################################################################
 # Model Definition
