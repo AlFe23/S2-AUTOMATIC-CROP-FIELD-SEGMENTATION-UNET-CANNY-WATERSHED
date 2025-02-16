@@ -65,6 +65,7 @@ Download pre-trained models at:
 4. **Automatic segmentation with pre-trained models**
    - 4.1 Pre-trained Model v1 with Generalised Training Dataset
    - 4.2 Example of segmentation obtained on a new AOI, Modesto (CA), USA.
+   - 4.3 Automated Inference Scripts
 
 
 
@@ -500,3 +501,21 @@ The training dataset v1 consists of about 90,000 images, each 256x256 pixels, su
 Below is reported an example of automatic processing executed on a test area of Modesto (CA), USA.
 
 ![image](https://github.com/AlFe23/S2-AUTOMATIC-CROP-FIELD-SEGMENTATION-UNET-CANNY-WATERSHED/assets/105355911/99d5221a-88b6-4a41-ab1e-63315f118dac)
+
+
+### 4.3 Automated Inference Scripts
+
+For **fully automated** U-Net or ResUNet predictions, we provide:
+
+- **`inference_v3_solopred_auto.py`**  
+  - Scans a **base directory** with multiple subfolders of **tiled input images**.  
+  - Loads a specified model (either `.keras` or `.h5`) and runs inference **folder by folder**.  
+  - Automatically saves predicted masks in appropriately named output directories (e.g., `_predicted` suffix).  
+  - Especially convenient when handling large numbers of input directories without manually enumerating them.
+
+**Usage Overview**  
+1. **Set the `base_directory`** (contains multiple subfolders of tiles).  
+2. **Provide your trained model path** (e.g., `U-Net-Weights-BFCE.keras`).  
+3. **Run the script**:
+   ```bash
+   python inference_v3_solopred_auto.py
