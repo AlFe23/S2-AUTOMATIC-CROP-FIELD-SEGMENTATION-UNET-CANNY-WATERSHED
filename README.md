@@ -4,7 +4,12 @@ Automatic software for crop field segmentation using Sentinel-2 L2A images. This
 
 **Citation:**
 
-- Ferrari, A., Saquella, S., Laneve, G., Pampanoni, V. (2024, July). Automating Crop-Field Segmentation in High-Resolution Satellite Images: A U-Net Approach With Optimized Multitemporal Canny Edge Detection. In IGARSS 2024-2024 IEEE International Geoscience and Remote Sensing Symposium (soon to be published). IEEE.
+
+A. Ferrari, S. Saquella, G. Laneve and V. Pampanoni,  
+"Automating Crop-Field Segmentation in High-Resolution Satellite Images:  
+A U-Net Approach with Optimized Multitemporal Canny Edge Detection,"  
+IGARSS 2024 - 2024 IEEE International Geoscience and Remote Sensing Symposium,  
+Athens, Greece, 2024, pp. 4094-4098, doi: 10.1109/IGARSS53475.2024.10641103
 
 **Links:**
 
@@ -120,11 +125,31 @@ prefix_name_list = ['tilename1_data1', 'tilename1_data2', 'tilename1_data3', 'ti
 
 Note: the date in the prefix is also added within the name of the folder containing the subtiles of each image, ensuring that a different folder is created for each Canny input, repeated as many times as the number of 3ch input images. Remind that the training strategz proposed by the authors associates different input images to the same multitemporal Canny output mask!
 
+
+
+
+> **Additionally**, besides `new_subtiler_wOverlap.py`, we have:
+> - **`subtiler_wOverlap_auto.py`**: Basic tiling for original 10m Sentinel-2 images using user-defined overlap.
+> - **`subtiler_wOverlap_v2.py`**: Adds support for **prefix-based** naming of output tiles, allowing multiple images in one run.
+> - **`subtiler_wOverlap_auto_SR.py`**: Specifically designed for **superresolved Sentinel-2 L2A images**, and supports **channel selection** (e.g., `[1, 5, 6]` for B2, NDVI, NDWI).
+
+Each script still produces 256×256 (default) tiles, with optional overlap (e.g. 32 px). Check the docstrings in each script for usage examples.
+
 ## 2. **Segmentation with UNet**
  
 ## 2.1 U-Net Training 
 
 The Python script `Resunet_v2_3.py` uses TensorFlow to train a U-Net neural network. The network is optimized to run on GPU hardware, utilizing mixed precision and dynamic memory management to improve efficiency and performance.
+
+> We provide multiple **training scripts**, each adding further optimizations:
+> - **`unet_v2_1.py`**: Introduces `tf.data.Dataset` for efficient data loading (shuffling, prefetching).
+> - **`unet_v2_2.py`**: Improves memory usage while loading large datasets.
+> - **`unet_v2_3.py`**: Refines dataset handling and VRAM usage, enabling larger batch sizes.
+> - **`Resunet_v2_3.py`**: Switches from plain U-Net to **ResUNet** (with residual connections).
+> - **`Resunet_v3.py`**: Further refines ResUNet training (e.g. numerical stability, disabling mixed precision if unstable).
+
+Use whichever best suits your system constraints. All share the same fundamental training flow described here.
+
 
 ### 2.1.1 Features
 - **Mixed Precision Training**: Utilizes 16-bit and 32-bit data types during training, reducing memory consumption and speeding up the process.
@@ -286,6 +311,14 @@ The script `inference.py` performs inference on a new dataset using a previously
 - **Disable GPU**: By default, the script runs inference using the CPU. This can be modified by removing or commenting out the line `os.environ['CUDA_VISIBLE_DEVICES'] = '-1'`.
 - **Pre-trained Model**: Ensure that the path to the saved model is correct and accessible by the script.
 
+> In addition to `inference.py`, we include:
+> - **`inference_v2.py`**: Computes IoU, Precision, Recall at inference time.
+> - **`inference_v3.py`**: Supports **both `.keras` and `.h5`** model formats, plus custom layers.
+> - **`inference_v3_solopred_auto.py`**: Automates **batch inference** on multiple subfolders, letting you run inference on all tile directories in one go.
+
+These scripts share the same structure: load, normalize images, run predictions, save masks.
+
+
 ### 2.3.3 Dataset Preparation
 The dataset for inference must be prepared with the same preprocessing used for training:
 - **Loading Images**: Images must be loaded from the specified directory.
@@ -332,6 +365,8 @@ Where 'm' and 'n' respectively represent the row and column position of the 256x
 Note: the script reads the positions starting from the third position, where the positions are separated by '_'.
 
 Remember to set the same overlap size as the one chosen within input pre-processing step.
+
+> We now recommend using `ReMosaiker_overlap_v2.py` instead of the older script, as it **preserves georeferencing** from an original GeoTIFF. It aligns the reassembled mask precisely with the source image’s projection and extent.
 
 ### Prerequisites
 - Python
@@ -387,6 +422,13 @@ The following morphological transformations are performed on the image to improv
 2. **Small Object Removal**: Removal of small objects smaller than 200 pixels with connectivity of type 2. This step is crucial for eliminating isolated components that can be interpreted as noise.
 3. **Small Object Removal on Negative**: Inversion of the mask to work on non-edges as objects, followed by small object removal from the inverted mask, setting a minimum size threshold of 80 pixels and connectivity of type 2.
 
+> Our **`unet_output_cleaner.py`** includes:
+> 1. **Morphological Opening**  
+> 2. **Remove Small Objects**  
+> 3. **Optional Hole-Filling**  
+> 
+> It reads/writes GeoTIFF and **preserves georeferencing**. Values remain **0 == edge** or **255 == non-edge** after cleaning.
+
 ### Usage
 
 To use this script, specify the input file path as an argument to the command and run the script. The result will be a clean GeoTIFF file saved at the specified path.
@@ -400,6 +442,12 @@ To use this script, specify the input file path as an argument to the command an
 The script `iterativeWS_v2.py` implements an iterative approach to the watershed segmentation algorithm for identifying closed segments, ideal for subsequent polygonization of agricultural fields. Starting with identifying the largest fields and then moving to smaller ones, the iterative application of this method aims to minimize the risk of over-segmentation, improving the quality and accuracy of segmentation in complex agricultural image scenarios.
 
 After generating a binary edge mask through a UNet model and subsequent morphological cleaning, the watershed algorithm is applied to identify closed areas representing agricultural fields. Using an iterative approach, the process starts with the search for local maxima at greater distances to identify the largest fields, then progressively decreases the minimum search distance, allowing for the identification of smaller fields without excessively fragmenting the larger ones.
+
+> We have multiple watershed scripts:
+> - **`iterativeWS_v2.py`**: Basic iterative approach.  
+> - **`iterativeWS_v3.py`**: Fix for local maxima detection (shape mismatch).  
+> - **`iterativeWS_v4.py`**: Introduces **parallelization** (`multiprocessing`) and uses `uint32` to handle >65535 segments.
+
 
 ### 3.1.2 Input
 
@@ -432,6 +480,8 @@ The process uses the GDAL library to read an input raster representing the water
 - **Input Mask**: A raster where each unique value represents a distinct segment.
 - **Shapefile**: A Shapefile containing polygons for each identified segment. Each polygon has a 'Label' attribute corresponding to the segment's label in the input raster.
 
+
+> If you need **geometry simplification**, use **`polygonize_watershed_v2.py`**, which adds a `simplify_tolerance` parameter. That can reduce polygon complexity while preserving topology (via `SimplifyPreserveTopology()`).
 
 ## 4. **Automatic segmentation with pre-trained models**
 
