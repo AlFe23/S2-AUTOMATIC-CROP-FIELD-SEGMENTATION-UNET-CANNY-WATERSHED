@@ -5,11 +5,7 @@ Automatic software for crop field segmentation using Sentinel-2 L2A images. This
 **Citation:**
 
 
-A. Ferrari, S. Saquella, G. Laneve and V. Pampanoni,  
-"Automating Crop-Field Segmentation in High-Resolution Satellite Images:  
-A U-Net Approach with Optimized Multitemporal Canny Edge Detection,"  
-IGARSS 2024 - 2024 IEEE International Geoscience and Remote Sensing Symposium,  
-Athens, Greece, 2024, pp. 4094-4098, doi: 10.1109/IGARSS53475.2024.10641103
+A. Ferrari, S. Saquella, G. Laneve and V. Pampanoni,  "Automating Crop-Field Segmentation in High-Resolution Satellite Images:  A U-NetApproach with Optimized Multitemporal Canny Edge Detection,"  IGARSS 2024 - 2024 IEEE International Geoscience and Remote Sensing Symposium,  Athens, Greece, 2024, pp. 4094-4098, doi: 10.1109/IGARSS53475.2024.10641103
 
 **Links:**
 
